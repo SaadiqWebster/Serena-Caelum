@@ -204,7 +204,7 @@ def fill_enemy_animation_database(path):
                 frame = pygame.image.load(path+'/'+directory+'/'+_dir+'/'+_dir+'_'+str(i+1)+'.png')
                 frame.set_colorkey((0,255,0))
                 enemy_animation_database[directory][_dir] += [frame]*6
-fill_enemy_animation_database('assets/animations/enemies')
+fill_enemy_animation_database("programs/assets/animations/enemies/")
 
 # def fill_enemy_sounds_database(path):
 #     files = os.listdir(path)
