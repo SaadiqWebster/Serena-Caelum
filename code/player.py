@@ -125,7 +125,8 @@ class Hitbox:
 class Player:
     def __init__(self, x, y):
         # hurtbox, states, velocities
-        self.health = 100
+        self.health = 20
+        self.max_health = 20
         self.special = 0
         self.inventory = []
         self.inventory_size = 3
@@ -180,7 +181,7 @@ class Player:
         self.prev_button = [False]*14
     
     def restart(self):
-        self.health = 100
+        self.health = self.max_health
         self.special = 0
         self.inventory = []
         self.velocity = [0,0]
@@ -288,9 +289,9 @@ class Player:
 
     def use_item(self, id):
         if id == 0:
-            self.health += 50
+            self.health = min(self.health+round(self.max_health / 2), self.max_health)
         if id == 1:
-            self.health += 100
+            self.health = self.max_health
         if id == 2:
             self.increase_special(10)
         if id == 3:
@@ -300,8 +301,6 @@ class Player:
             self.fairy.visible = True
             self.play_sound('fairy')
             
-        if self.health > 100:
-            self.health = 100
 
     def increase_special(self, amount):
         if self.special != 20 and self.special + amount >= 20:
@@ -525,6 +524,7 @@ class Player:
                     if self.dtap_timer > 0 and self.flip == True and self.y_state == 'IDLE':
                         self.x_state = 'RUN'
                         self.set_animation('run',0, 'LOOP')
+                        self.play_sound('run')
                         self.ease_x = True
                         self.afterimage = True
                         self.dtap_timer = 0
@@ -546,6 +546,7 @@ class Player:
                             self.input_buffer = True
                             self.input_buffer_timer = 30
                             self.set_animation('slide',0, 'ONCE')
+                            self.play_sound('slide')
                     self.x_state = 'IDLE'
                     if self.y_state == 'IDLE' and not self.ease_x:
                         self.set_animation('idle',0, 'LOOP')
@@ -555,6 +556,7 @@ class Player:
                     if self.dtap_timer > 0 and self.flip == False and self.y_state == 'IDLE':
                         self.x_state = 'RUN'
                         self.set_animation('run',0, 'LOOP')
+                        self.play_sound('run')
                         self.ease_x = True
                         self.afterimage = True
                         self.dtap_timer = 0
@@ -576,6 +578,7 @@ class Player:
                             self.input_buffer = True
                             self.input_buffer_timer = 30
                             self.set_animation('slide',0, 'ONCE')
+                            self.play_sound('slide')
                     self.x_state = 'IDLE'
                     if self.y_state == 'IDLE' and not self.ease_x:
                         self.set_animation('idle',0, 'LOOP')
@@ -687,7 +690,8 @@ class Player:
         elif (key == pygame.K_SPACE or button == 4 or button == 5):
             if self.special >= 20 and self.x_state == 'IDLE' and self.y_state == 'IDLE':
                 self.x_state = 'SPECIAL'
-                self.play_sound('use_special')
+                self.play_sound('special_use')
+                self.play_sound('special_fade')
                 self.special = 0
 
         if (key == pygame.K_UP or key == pygame.K_w or button == 1 or button == 12):

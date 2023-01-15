@@ -7,7 +7,7 @@ from objects import *
 #### command to use pyinstaller
 
 # for debug
-MUSIC = True
+MUSIC = False
 
 def START_SCREEN():
     pygame.mixer.music.load('code/assets/sounds/music/menu.wav')

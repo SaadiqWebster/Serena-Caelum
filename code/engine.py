@@ -5,7 +5,7 @@ import objects as o
 pygame.mixer.pre_init(44100, -16, 2, 512)
 pygame.init()
 pygame.mixer.set_num_channels(50)
-pygame.display.set_caption('Serena Caelum: Bright Skies')
+pygame.display.set_caption('Serena Caelum')
 pygame.joystick.init()
 WINDOW_SIZE = (720,480)
 CAMERA_SIZE = (240,160)
@@ -481,7 +481,7 @@ class Hud:
         pygame.draw.rect(camera, (0,0,0), pygame.Rect(0,0,CAMERA_SIZE[0], 23))
         camera.blit(tilesets_database['hud_list']['player_window'], (0, 0))
         
-        for i in range(math.ceil(player.health / 10)):
+        for i in range(math.ceil(player.health / (player.max_health/10) )):
             camera.blit(tilesets_database['hud_list']['health_bar'], (2+(i*6), 2))
 
         #color_offset = math.floor(len(COLORSET) / 56)

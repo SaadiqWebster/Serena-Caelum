@@ -216,7 +216,7 @@ class Enemy:
     def __init__(self, x, y):
         self.id = 'Enemy'
         self.max_health = 3
-        self.damage = 5
+        self.damage = 1
         self.rect = pygame.Rect(x, y, 16, 16)
         self.health = self.max_health
         self.velocity = [0,0]
@@ -322,8 +322,8 @@ class Enemy:
         self.alpha -= 5
         if self.alpha < 0:
             self.DESTROY = True
-            # 25% chance an item drop
-            if random.randint(0,3) == 0:
+            # 20% chance an item drop
+            if random.randint(0,4) == 0:
                 x = self.rect.x + (self.rect.width / 2) - 8
                 y = self.rect.y - 8 #+ (self.rect.height / 2) - 8
                 n = random.randint(0,4)
@@ -334,7 +334,6 @@ class Frog(Enemy):
         super().__init__(x, y)
         self.id = 'Squish'
         self.max_health = 2
-        self.damage = 5
         self.rect = pygame.Rect(x, y, 14, 8)
         self.health = self.max_health
         global enemy_animation_database
@@ -359,7 +358,7 @@ class Frog(Enemy):
                     if random.randint(0,1) == 0:
                         self.state = 'JUMP'
                         self.set_animation('jump',0,'ONCE')
-                        #self.play_sound('hop')
+                        self.play_sound('hop')
                         self.gravity = -4
                         self.velocity[1] = self.gravity
                     else:
@@ -384,7 +383,6 @@ class Bat(Enemy):
         super().__init__(x, y)
         self.id = 'Freez'
         self.max_health = 2
-        self.damage = 5
         self.rect = pygame.Rect(x, y, 12, 16)
         self.health = self.max_health
         global enemy_animation_database
@@ -395,10 +393,11 @@ class Bat(Enemy):
     def update_timer_events(self):
         if self.state == 'WAKE UP' or self.state == 'STUN':
             self.current_frame += 1
+
         super().update_timer_events()
 
-        # if self.current_animation == 'fly' and self.current_frame == 6:
-        #     self.play_sound('wing_flap')
+        if self.current_animation == 'fly' and self.current_frame == 0:
+            self.play_sound('wing_flap')
 
     def update(self, floor_collisions, object_collisions, player):
         super().update(floor_collisions, object_collisions, player)
@@ -413,6 +412,7 @@ class Bat(Enemy):
             
                 if player.rect.y > self.rect.y and player.rect.y < self.rect.y+128 and player.rect.x > self.rect.x-48 and player.rect.x < self.rect.x+48:
                     self.set_animation('fly',0,'LOOP')
+                    self.play_sound('wing_flap')
                     self.state = 'WAKE UP'
 
             if self.state == 'WAKE UP' or self.state == 'STUN':
@@ -465,7 +465,6 @@ class Ghost(Enemy):
         super().__init__(x, y)
         self.id = 'Joak'
         self.max_health = 3
-        self.damage = 5
         self.rect = pygame.Rect(x, y, 16, 16)
         self.health = self.max_health
         global enemy_animation_database
@@ -541,7 +540,7 @@ class Ghost(Enemy):
                     self.alpha = 0                
                 self.velocity = [0,0]
 
-                if self.flip == player.flip or (self.flip and player.rect.x > self.rect.x+16) or (not self.flip and player.rect.x < self.rect.x):
+                if self.flip == player.flip or (self.flip and player.rect.x > self.rect.x+32) or (not self.flip and player.rect.x < self.rect.x-16):
                     self.set_animation('idle',0,'LOOP')
                     self.play_sound('laugh')
                     self.state = 'FOLLOW'
@@ -567,6 +566,7 @@ class Ghost(Enemy):
                 self.alpha = 255
                 self.timer = 0
                 self.state = 'RUN'
+            
     
     def hit(self, damage, player_direction):
         super().hit(damage, player_direction)
@@ -576,98 +576,11 @@ class Ghost(Enemy):
             self.timer = 0
             self.state = 'RUN'
 
-class Lion(Enemy):
-    def __init__(self, x, y):
-        super().__init__(x, y)
-        self.id = 'Lion'
-        self.max_health = 3
-        self.damage = 5
-        self.rect = pygame.Rect(x, y, 32, 16)
-        self.health = self.max_health
-        
-        global enemy_animation_database
-        self.animation_database = enemy_animation_database[self.id]
-        self.timer = 0
-        self.timer_cap = 60
-        self.leftbound = 0
-        self.rightbound = 4
-        self.distance = 0
-
-    def update(self, floor_collisions, object_collisions, player):
-        super().update(floor_collisions, object_collisions, player)
-        if self.state != 'DESTROY':
-            if floor_collisions['bottom']:
-                    if self.state == 'JUMP' and self.timer > self.timer_cap:
-                        self.state = 'WAIT'
-                        self.timer = 0
-
-            if self.state == 'WAIT':
-                self.velocity[0] = 0
-                self.timer += 1
-                if self.timer >= self.timer_cap:
-                    self.timer = 0
-                    self.flip = False if player.rect.x > self.rect.x else True
-                    if player.rect.x > self.rect.x-32 and player.rect.x < self.rect.x+32:
-                        self.state = 'JUMP'
-                    elif player.rect.x > self.rect.x-64 and player.rect.x < self.rect.x+64:
-                        self.state = 'CHASE'
-                    else:
-                        self.state = 'IDLE'
-
-            if self.state == 'IDLE':
-                if player.rect.x > self.rect.x-64 and player.rect.x < self.rect.x+80:
-                    self.state = 'CHASE'
-                else:
-                    self.timer += 1  
-                    if self.timer >= self.timer_cap:
-                        if self.rightbound == 0:
-                            self.flip = True
-                        elif self.leftbound == 0:
-                            self.flip = False
-                        elif random.randint(0,1) == 0:
-                            self.flip = not self.flip
-                        self.distance = random.randint(0,4)
-                        self.state = 'WALK'
-                        self.timer = 0
-
-            if self.state == 'CHASE':
-                if player.rect.x > self.rect.x-32 and player.rect.x < self.rect.x+32:
-                    self.timer = 0
-                    self.state = 'JUMP'
-                self.velocity[0] = 2 if player.rect.x > self.rect.x else -2
-                self.flip = False if player.rect.x > self.rect.x else True
-            
-            if self.state == 'JUMP':
-                self.timer += 1
-                self.velocity[0] = 0
-                if self.timer == self.timer_cap:
-                    self.gravity = -3
-                if self.timer >= self.timer_cap:
-                    self.velocity[0] = 3 if not self.flip else -3
-
-            if self.state == 'WALK':
-                if player.rect.x > self.rect.x-64 and player.rect.x < self.rect.x+80:
-                    self.distance = 0
-                    self.state = 'CHASE'
-                elif self.distance > 0:
-                    self.velocity[0] = 1 if not self.flip else -1
-                    self.timer += 1
-                    if self.timer >= 30:
-                        self.timer = 0
-                        self.distance -= 1
-                        self.leftbound += 1 if not self.flip else -1
-                        self.rightbound += -1 if not self.flip else 1
-                        if self.rightbound == 0 or self.leftbound == 0:
-                            self.flip = not self.flip
-                else:
-                    self.state = 'IDLE'
-
 class Bird(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
         self.id = 'Bean'
         self.max_health = 1
-        self.damage = 5
         self.rect = pygame.Rect(x, y, 16, 16)
         self.health = self.max_health
         global enemy_animation_database
@@ -722,3 +635,90 @@ class Bird(Enemy):
                         self.state = 'FLY'
                         self.timer = 60
                     
+class Lion(Enemy):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.id = 'Lion'
+        self.max_health = 3
+        self.damage = 2
+        self.rect = pygame.Rect(x, y, 32, 16)
+        self.health = self.max_health
+        
+        global enemy_animation_database
+        self.animation_database = enemy_animation_database[self.id]
+        self.timer = 0
+        self.timer_cap = 30
+        self.leftbound = 0
+        self.rightbound = 4
+        self.distance = 0
+
+    def update(self, floor_collisions, object_collisions, player):
+        super().update(floor_collisions, object_collisions, player)
+        if self.state != 'DESTROY':
+            if floor_collisions['bottom']:
+                    if self.state == 'JUMP' and self.timer > self.timer_cap:
+                        self.state = 'WAIT'
+                        self.timer = 0
+
+            if self.state == 'WAIT':
+                self.velocity[0] = 0
+                self.timer += 1
+                if self.timer >= self.timer_cap:
+                    self.timer = 0
+                    self.flip = False if player.rect.x > self.rect.x else True
+                    if player.rect.x > self.rect.x-32 and player.rect.x < self.rect.x+48:
+                        self.state = 'JUMP'
+                        self.play_sound('roar')
+                    elif player.rect.x > self.rect.x-64 and player.rect.x < self.rect.x+80:
+                        self.state = 'CHASE'
+                    else:
+                        self.state = 'IDLE'
+
+            if self.state == 'IDLE':
+                if player.rect.x > self.rect.x-64 and player.rect.x < self.rect.x+80:
+                    self.state = 'CHASE'
+                else:
+                    self.timer += 1  
+                    if self.timer >= self.timer_cap:
+                        if self.rightbound == 0:
+                            self.flip = True
+                        elif self.leftbound == 0:
+                            self.flip = False
+                        elif random.randint(0,1) == 0:
+                            self.flip = not self.flip
+                        self.distance = random.randint(0,4)
+                        self.state = 'WALK'
+                        self.timer = 0
+
+            if self.state == 'CHASE':
+                if player.rect.x > self.rect.x-32 and player.rect.x < self.rect.x+48:
+                    self.timer = 0
+                    self.state = 'JUMP'
+                    self.play_sound('roar')
+                self.velocity[0] = 2 if player.rect.x > self.rect.x else -2
+                self.flip = False if player.rect.x > self.rect.x else True
+            
+            if self.state == 'JUMP':
+                self.timer += 1
+                self.velocity[0] = 0
+                if self.timer == self.timer_cap:
+                    self.gravity = -3
+                if self.timer >= self.timer_cap:
+                    self.velocity[0] = 3 if not self.flip else -3
+
+            if self.state == 'WALK':
+                if player.rect.x > self.rect.x-64 and player.rect.x < self.rect.x+80:
+                    self.distance = 0
+                    self.state = 'CHASE'
+                elif self.distance > 0:
+                    self.velocity[0] = 1 if not self.flip else -1
+                    self.timer += 1
+                    if self.timer >= 15:
+                        self.timer = 0
+                        self.distance -= 1
+                        self.leftbound += 1 if not self.flip else -1
+                        self.rightbound += -1 if not self.flip else 1
+                        if self.rightbound == 0 or self.leftbound == 0:
+                            self.flip = not self.flip
+                else:
+                    self.state = 'IDLE'
