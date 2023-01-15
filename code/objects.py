@@ -115,7 +115,7 @@ class Gate:
 class Waterfall:
     def __init__(self,x,y):
         self.rect = pygame.Rect(x,y,16,16)
-        img_loc = 'assets/animations/objects/waterfall/'
+        img_loc = 'code/assets/animations/objects/waterfall/'
         self.animation = []
         self.current_frame = 0
         for i in range(1,5):
@@ -146,10 +146,10 @@ class Item:
             3:"Restores full special",
             4:"Doubles damage given"
         }
-        self.item_img = pygame.image.load('assets/tilesets/tiles/'+self.name[self.id]+'.png').convert()
+        self.item_img = pygame.image.load('code/assets/tilesets/tiles/'+self.name[self.id]+'.png').convert()
         self.item_img.set_colorkey((0,255,0))
         self.animation_frames_database = {}
-        self.animation = self.load_animation('assets/animations/objects/item-bubble',[60]+[6]*5)
+        self.animation = self.load_animation('code/assets/animations/objects/item-bubble',[60]+[6]*5)
         self.current_frame = 0
         self.DESTROY = False
         
@@ -204,13 +204,13 @@ def fill_enemy_animation_database(path):
                 frame = pygame.image.load(path+'/'+directory+'/'+_dir+'/'+_dir+'_'+str(i+1)+'.png')
                 frame.set_colorkey((0,255,0))
                 enemy_animation_database[directory][_dir] += [frame]*6
-fill_enemy_animation_database("programs/assets/animations/enemies/")
+fill_enemy_animation_database("code/assets/animations/enemies")
 
 # def fill_enemy_sounds_database(path):
 #     files = os.listdir(path)
 #     for f in files:
 #         enemy_sounds_database[f[:-4]] = pygame.mixer.Sound(path+'/'+f)
-# fill_enemy_sounds_database('assets/sounds/sfx/objects')
+# fill_enemy_sounds_database('code/assets/sounds/sfx/objects')
 
 class Enemy:
     def __init__(self, x, y):

@@ -3,15 +3,18 @@ import engine as e
 from engine import *
 from objects import *
 
+#### C:\users\saadi\appdata\local\packages\pythonsoftwarefoundation.python.3.9_qbz5n2kfra8p0\localcache\local-packages\python39\Scripts\pyinstaller.exe
+#### command to use pyinstaller
+
 # for debug
 MUSIC = True
 
 def START_SCREEN():
-    pygame.mixer.music.load('assets/sounds/music/menu.wav')
+    pygame.mixer.music.load('code/assets/sounds/music/menu.wav')
     pygame.mixer.music.set_volume(e.settings['Music Volume']/10)
     if MUSIC:
         pygame.mixer.music.play(-1)
-    fancy_font = Font('assets/fonts/fancy.png',0)
+    fancy_font = Font('code/assets/fonts/fancy.png',0)
     background = SkyBackground(e.tilesets_database, CAMERA_SIZE, CHUNK_SIZE)
     transition = Transition('FADE-OUT',WHITE,255,3,CAMERA_SIZE)
     state = 'START'
@@ -118,7 +121,7 @@ def START_SCREEN():
                     game_win = False
                     if select == 0:
                         game_win = GAME_INTRO()
-                        pygame.mixer.music.load('assets/sounds/music/menu.wav')
+                        pygame.mixer.music.load('code/assets/sounds/music/menu.wav')
                         if MUSIC:
                             pygame.mixer.music.play(-1)
                     elif select == 1:
@@ -142,8 +145,8 @@ def START_SCREEN():
 
 
 def OPTIONS_SCREEN():
-    fancy_font = Font('assets/fonts/fancy.png',0)
-    plain_font = Font('assets/fonts/plain.png')
+    fancy_font = Font('code/assets/fonts/fancy.png',0)
+    plain_font = Font('code/assets/fonts/plain.png')
     transition = Transition('FADE-OUT',BLACK,255,5,CAMERA_SIZE)
     options = ['Window Size','Window Border','Full Screen','Music Volume','Sound Volume']
     options_surf = pygame.Surface(CAMERA_SIZE)
@@ -314,7 +317,7 @@ def HOW_TO_PLAY():
 
 
 def GAME_INTRO():
-    pygame.mixer.music.load('assets/sounds/music/intro.wav')
+    pygame.mixer.music.load('code/assets/sounds/music/intro.wav')
     pygame.mixer.music.set_volume(e.settings['Music Volume']/10)
     if MUSIC:
         pygame.mixer.music.play(-1)
@@ -325,7 +328,7 @@ def GAME_INTRO():
     text = ['The sky is shattered','but the sun is still there','so the High Priestess must be safe.',
             'She left so fast and told no one.','As her guardian, it\'s my duty to protect her.','Where did she go?',
             'Soleanna!','Even if the sky is falling down','I will find you!']
-    fancy_font = Font('assets/fonts/fancy.png',0)
+    fancy_font = Font('code/assets/fonts/fancy.png',0)
     text_scroll = TextScroller(text, fancy_font,(255,255,255),fancy_font.get_width(text[0]),fancy_font.height,5)
     transition = Transition('FADE-IN',(255,255,255),0,3,CAMERA_SIZE)
     Run = True
@@ -353,7 +356,7 @@ def GAME_INTRO():
                 if scene == 6:
                     timer_duration = 240
                     if MUSIC:
-                        pygame.mixer.music.load('assets/sounds/music/level_C.wav')
+                        pygame.mixer.music.load('code/assets/sounds/music/level_C.wav')
                         pygame.mixer.music.play(-1)
 
         elif scene < 8:
@@ -409,7 +412,7 @@ def GAME_INTRO():
             if (event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN) or (event.type == pygame.JOYBUTTONDOWN and event.button == 7):
                 Run = False
                 if scene < 6 and MUSIC:
-                    pygame.mixer.music.load('assets/sounds/music/level_A.wav')
+                    pygame.mixer.music.load('code/assets/sounds/music/level_A.wav')
                     pygame.mixer.music.set_volume(e.settings['Music Volume']/10)
                     pygame.mixer.music.play(-1)
 
@@ -426,7 +429,7 @@ def GAME_INTRO():
 
 def REUNION_CUTSCENE():
     pygame.mixer.music.fadeout(500)
-    pygame.mixer.music.load('assets/sounds/music/reunion.wav')
+    pygame.mixer.music.load('code/assets/sounds/music/reunion.wav')
     pygame.mixer.music.set_volume(e.settings['Music Volume']/10)
     scene = 0
     timer = 0
@@ -438,7 +441,7 @@ def REUNION_CUTSCENE():
             'S:I just hope and pray. I want to do more.','C:...','C:Soleanna, my strength comes from your light.','C:I fight because I don\'t want to live in a world without you.',
             'S:The enemy is almost here. Our time has run up.','C:I\'ll fight and I\'ll win.','C:And then, we can watch the sun rise together.','S:Caelum, my guardian, my blue bird... I pray for your safe return.']
     text_box = pygame.Rect(0,0,CAMERA_SIZE[0],33)
-    fancy_font = Font('assets/fonts/fancy.png',0)
+    fancy_font = Font('code/assets/fonts/fancy.png',0)
     text_scroll = TextScroller(text, fancy_font,(255,255,255),210,(fancy_font.height*2)+1,3)
     transition = Transition('FADE-IN',(255,255,255),0,3,CAMERA_SIZE)
     Run = True
@@ -562,7 +565,7 @@ def GAME_OVER(player, camera_pos, score):
 
 
 def RESULTS_SCREEN(back_color, font_color, header, score, shadow_color=(100, 100, 100)):
-    plain_font = Font('assets/fonts/plain.png')
+    plain_font = Font('code/assets/fonts/plain.png')
     transition = Transition('FADE-IN',(0,0,0),0,4,CAMERA_SIZE)
     results_surf = pygame.Surface(CAMERA_SIZE)
     results_surf.set_colorkey((0,0,0))
@@ -641,7 +644,7 @@ def RESULTS_SCREEN(back_color, font_color, header, score, shadow_color=(100, 100
 def GAME_LOOP():
     full_transition = Transition('FADE-OUT',(255,255,255),255,3,CAMERA_SIZE)
     level_transition = None
-    plain_font = Font('assets/fonts/plain.png')
+    plain_font = Font('code/assets/fonts/plain.png')
     back_layer0 = TrippyBackground(e.tilesets_database, CAMERA_SIZE, CHUNK_SIZE, COLORSET, GREYSCALE)
     HUD = Hud()
     title_card = TitleCard("Find the High Priestess!")

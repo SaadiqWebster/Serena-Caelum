@@ -99,7 +99,7 @@ def fill_tilesets_database(path):
             tilesets_database[directory+'_list'][f[:-4]] = tile
             if directory == 'tiles':
                 tile_rect_list[f[:-4]] = []
-fill_tilesets_database('assets/tilesets')
+fill_tilesets_database('code/assets/tilesets')
 
 
 def fill_sounds_database(path):
@@ -108,9 +108,9 @@ def fill_sounds_database(path):
     for f in files:
         database[f[:-4]] = pygame.mixer.Sound(path+'/'+f)
     return database
-sounds_database = fill_sounds_database('assets/sounds/sfx/menu')
-player.sounds_database = fill_sounds_database('assets/sounds/sfx/player')
-o.enemy_sounds_database = fill_sounds_database('assets/sounds/sfx/objects')
+sounds_database = fill_sounds_database('code/assets/sounds/sfx/menu')
+player.sounds_database = fill_sounds_database('code/assets/sounds/sfx/player')
+o.enemy_sounds_database = fill_sounds_database('code/assets/sounds/sfx/objects')
 
 
 def play_sound(sound):
@@ -155,7 +155,7 @@ def read_input_joystick(event):
 
 
 def load_level_config(level):
-    f=open('config/level_'+level+'.json')
+    f=open('code/config/level_'+level+'.json')
     return json.load(f)
 
 
@@ -473,7 +473,7 @@ def draw_foreground_parallax(camera_pos):
 
 class Hud:
     def __init__(self):
-        self.text = Font('assets/fonts/plain.png')
+        self.text = Font('code/assets/fonts/plain.png')
         self.target = None
         self.timer = 0
 
@@ -666,7 +666,7 @@ class Transition:
 
 class TitleCard:
         def __init__(self, text):
-            self.fancy_font = Font('assets/fonts/fancy.png',0)
+            self.fancy_font = Font('code/assets/fonts/fancy.png',0)
             self.alpha = 0
             self.text = text
             self.text_width = self.fancy_font.get_width(self.text)
