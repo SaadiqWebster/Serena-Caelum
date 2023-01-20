@@ -582,13 +582,14 @@ class Font:
 
 
 class TextScroller:
-    def __init__(self, text, font, color, width, height, delay):
+    def __init__(self, text, font, color, width, height, delay, startoffset=0):
         self.font = font
         self.width = width
         self.height = height
         self.delay = delay
         self.text = text  # list of strings
         self.color = color
+        self.startoffset = startoffset
 
         self.text_ptr = 0
         self.timer = 0
@@ -618,18 +619,79 @@ class TextScroller:
     def draw(self):
         text_surf = pygame.Surface((self.width, self.height))
         text_surf.set_colorkey((0,0,0))
-        x_offset = 0
+        x_offset = self.startoffset
         y_offset = 0
         for i in range(self.text_ptr+1):
             char_width = self.font.get_width(self.text[0][i])
             if x_offset + char_width > self.width or self.text[0][i] == '|':
                 x_offset = 0
-                y_offset += self.font.height + 1
+                y_offset += self.font.height + 2
+                if y_offset > self.height:
+                    self.end = True
             
             text_surf.blit(self.font.draw(self.text[0][i],color=self.color), (x_offset, y_offset))
             x_offset += char_width + self.font.spacing
         
         return text_surf
+
+
+class DialogBox:
+    def __init__(self, text, font, delay):
+        self.width = CAMERA_SIZE[0]
+        self.height = 38
+        self.font = font
+        self.textscroller = TextScroller(text,font,(255,255,255),self.width-20,200,delay)
+        self.speaker = self.get_speaker()
+        self.textscroller.text[0] = self.textscroller.text[0][2:]
+        self.textscroller.startoffset = self.font.get_width(self.speaker)
+        self.end = False
+
+    def next_line(self):
+        if self.textscroller.next:
+            self.textscroller.next_line()
+            self.speaker = self.get_speaker()
+            self.textscroller.text[0] = self.textscroller.text[0][2:]
+            self.textscroller.startoffset = self.font.get_width(self.speaker)
+        else:
+            self.end = True
+
+    def get_speaker(self):
+        if self.textscroller.text[0][0] == 'C':
+            return 'Caelum '
+        elif self.textscroller.text[0][0] == 'S':
+            return 'Soleanna '
+        else:
+            return ''
+
+    def draw(self):
+        text_surf = pygame.Surface((self.width, self.height))
+        if not self.end:
+            text_surf.fill((0,0,0))
+            
+            color = (80,185,235) if self.speaker == 'Caelum ' else (255,232,0)
+            shadow = (62,131,209) if self.speaker == 'Caelum ' else (62,131,209)
+            # shadow
+            #text_surf.blit(self.font.draw(self.speaker, shadow), (5,5))
+            self.textscroller.color = (100,100,100)
+            #text_surf.blit(self.textscroller.draw(), (5,4))
+            #text_surf.blit(self.textscroller.draw(), (5,5))
+            self.textscroller.color = (255,255,255)
+            # color
+            text_surf.blit(self.font.draw(self.speaker, color), (4,4))
+            text_surf.blit(self.textscroller.draw(), (4,4))  
+
+            # pointer
+            if self.textscroller.end and not self.end:
+                text_surf.blit(tilesets_database['tiles_list']['pointer'], (CAMERA_SIZE[0]-12, self.height-12 + 2 * ((2/math.pi)*math.asin(math.sin(time.time()*math.pi*3)))) )
+        else:
+            text_surf.set_colorkey((0,0,0))
+
+        return text_surf
+
+    def update(self):
+        self.textscroller.update()
+
+        
 
 
 class Transition:

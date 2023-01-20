@@ -7,7 +7,7 @@ from objects import *
 #### command to use pyinstaller
 
 # for debug
-MUSIC = False
+MUSIC = True
 
 def START_SCREEN():
     pygame.mixer.music.load('code/assets/sounds/music/menu.wav')
@@ -24,7 +24,7 @@ def START_SCREEN():
     instr_surf.set_colorkey((0,0,0))
     alpha = 0
 
-    text_scroller = TextScroller(['Serena Caelum : Bright Skies'], fancy_font, (255,255,255), 200, 100, 5)
+    text_scroller = TextScroller(['Serena Caelum'], fancy_font, (255,255,255), 200, 100, 5)
 
     while True:
         e.last_time = time.time()
@@ -67,7 +67,7 @@ def START_SCREEN():
         camera.blit(instr_surf,(0,0))
         
         text_scroller.update()
-        camera.blit(text_scroller.draw(),(50,60))
+        camera.blit(text_scroller.draw(),((CAMERA_SIZE[0]/2)-(fancy_font.get_width('Serena Caelum')/2), 60))
         
         for event in pygame.event.get():
             joystick_buttonpress = -1
@@ -350,13 +350,13 @@ def GAME_INTRO():
                 text_scroll.next_line() # pops text list from this loop as well
                 text_scroll.width = fancy_font.get_width(text[0])
 
-                if len(text) == 4:
-                    pygame.mixer.music.fadeout(100)
+                if len(text_scroll.text) == 4:
+                    pygame.mixer.music.fadeout(50)
                 
                 if scene == 6:
                     timer_duration = 240
                     if MUSIC:
-                        pygame.mixer.music.load('code/assets/sounds/music/level_C.wav')
+                        pygame.mixer.music.load('code/assets/sounds/music/level_A.wav')
                         pygame.mixer.music.play(-1)
 
         elif scene < 8:
@@ -428,31 +428,66 @@ def GAME_INTRO():
 
 
 def REUNION_CUTSCENE():
-    pygame.mixer.music.fadeout(500)
-    pygame.mixer.music.load('code/assets/sounds/music/reunion.wav')
-    pygame.mixer.music.set_volume(e.settings['Music Volume']/10)
+    pygame.mixer.music.fadeout(1000)
+    pygame.mixer.music.load('code/assets/sounds/music/reunion_A.wav')
     scene = 0
     timer = 0
-    text = ['C:Soleanna!','S:...Caelum?','S:I\'m glad you found me.','C:You left no clues where you would be...','C:and yet I knew exactly where to find you.',
+    text_p1 = ['C:Soleanna!','S:...Caelum?']
+    text_p2 = ['S:I\'m glad you found me.','C:You left no clues where you would be...','C:and yet I knew exactly where to find you.',
             'S:I couldn\'t let anyone know where I was.','S:This was the one place only you and I know.','S:We can be alone here.',
             'C:The sky is cracked. The animals have gone mad.','C:What is going on?','S:A great calamity has ripped through the atmosphere and slipped through to our surface.',
             'S:This malice has been sending whispers in my mind.','S:It\'s looking for the light of the sun... It\'s looking for me.','S:Caelum, if it gets to me... if my prayers stop',
             'S:then the sun will never rise again and the world will-','C:I know, and I want to help. Why did you leave without me?','S:It\'s not fair. You do so much for me and I give nothing in return.',
             'S:I just hope and pray. I want to do more.','C:...','C:Soleanna, my strength comes from your light.','C:I fight because I don\'t want to live in a world without you.',
             'S:The enemy is almost here. Our time has run up.','C:I\'ll fight and I\'ll win.','C:And then, we can watch the sun rise together.','S:Caelum, my guardian, my blue bird... I pray for your safe return.']
-    text_box = pygame.Rect(0,0,CAMERA_SIZE[0],33)
     fancy_font = Font('code/assets/fonts/fancy.png',0)
-    text_scroll = TextScroller(text, fancy_font,(255,255,255),210,(fancy_font.height*2)+1,3)
-    transition = Transition('FADE-IN',(255,255,255),0,3,CAMERA_SIZE)
+    dialog_box = DialogBox(text_p1,fancy_font,3)
+    transition = Transition('FADE-IN',(255,255,255),0,5,CAMERA_SIZE)
     Run = True
 
     while Run:
-        camera.fill((0,0,255))
-        pygame.draw.rect(camera,(0,0,0),text_box)
+        camera.fill((0,0,0))
 
-        camera.blit(text_scroll.draw(), (28,2))
-        if not text_scroll.end:
-                text_scroll.update()
+        if scene == 0:
+            timer += 1
+            if timer == 10:
+                pygame.mixer.music.set_volume(e.settings['Music Volume']/10)
+                e.play_sound('door')
+            if timer > 150:
+                timer = 0
+                scene += 1
+        
+        elif scene == 1:
+            camera.blit(dialog_box.draw(), (0,0))
+            dialog_box.update()
+            if dialog_box.end:
+                camera.blit(transition.draw(), (0,0))
+                if transition.end:
+                    scene += 1
+                    dialog_box = DialogBox(text_p2,fancy_font,3)
+                    transition = Transition('FADE-OUT',(255,255,255),255,3,CAMERA_SIZE)
+                    if MUSIC:
+                        pygame.mixer.music.play(-1)
+        
+        elif scene == 2:
+            camera.blit(e.tilesets_database['backgrounds_list']['options_screen'],(0,0))
+            camera.blit(transition.draw(), (0,0))
+            if transition.end:
+                camera.blit(dialog_box.draw(), (0,0))
+                dialog_box.update()
+                if dialog_box.end:
+                    scene += 1
+                    transition = Transition('FADE-IN',(255,255,255),0,3,CAMERA_SIZE)
+        
+        elif scene == 3:
+            camera.blit(e.tilesets_database['backgrounds_list']['options_screen'],(0,0))
+            pygame.mixer.music.fadeout(1000)
+            camera.blit(transition.draw(), (0,0))
+            
+            if transition.end:
+                pygame.mixer.music.load('code/assets/sounds/music/boss.wav')
+                pygame.mixer.music.set_volume(e.settings['Music Volume']/10)
+                Run = False
         
         for event in pygame.event.get():
             if event.type == pygame.JOYDEVICEADDED:
@@ -460,7 +495,7 @@ def REUNION_CUTSCENE():
             if event.type == pygame.JOYDEVICEREMOVED:
                 e.joysticks = [pygame.joystick.Joystick(i) for i in range(pygame.joystick.get_count())]
             if (event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN) or (event.type == pygame.JOYBUTTONDOWN and event.button == 7):
-                text_scroll.next_line()
+                dialog_box.next_line()
 
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -845,7 +880,7 @@ def GAME_LOOP():
                         if item_select >= len(player.inventory):
                             item_select = 0
                     if (joystick_buttonpress == 0 or (event.type == pygame.KEYDOWN and event.key == pygame.K_z)):
-                        if player.inventory[item_select].id < 2 or (player.inventory[item_select].id == 2 and player.special < 10):
+                        if player.inventory[item_select].id < 2 or (player.inventory[item_select].id == 2 and player.special < 10) or (player.inventory[item_select].id < 5 and player.special >= 20):
                             e.play_sound('select')
                         player.use_item(player.inventory[item_select].id)
                         player.inventory.pop(item_select)
