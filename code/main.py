@@ -7,7 +7,7 @@ from objects import *
 #### command to use pyinstaller
 
 # for debug
-MUSIC = True
+MUSIC = False
 
 def START_SCREEN():
     pygame.mixer.music.load('code/assets/sounds/music/menu.wav')
@@ -326,7 +326,7 @@ def GAME_INTRO():
     y_offset = 0
     timer_duration = 180
     text = ['The sky is shattered','but the sun is still there','so the High Priestess must be safe.',
-            'She left so fast and told no one.','As her guardian, it\'s my duty to protect her.','Where did she go?',
+            'She disappeared last night and told no one.','As her guardian, it\'s my duty to protect her.','I must find her before it\'s too late!',
             'Soleanna!','Even if the sky is falling down','I will find you!']
     fancy_font = Font('code/assets/fonts/fancy.png',0)
     text_scroll = TextScroller(text, fancy_font,(255,255,255),fancy_font.get_width(text[0]),fancy_font.height,5)
@@ -349,14 +349,16 @@ def GAME_INTRO():
                 scene += 1
                 text_scroll.next_line() # pops text list from this loop as well
                 text_scroll.width = fancy_font.get_width(text[0])
-
+                
                 if len(text_scroll.text) == 4:
+                    text_scroll.color = (255,255,0)
                     pygame.mixer.music.fadeout(50)
                 
                 if scene == 6:
+                    text_scroll.color = (255,255,255)
                     timer_duration = 240
                     if MUSIC:
-                        pygame.mixer.music.load('code/assets/sounds/music/level_A.wav')
+                        pygame.mixer.music.load('code/assets/sounds/music/level_B.wav')
                         pygame.mixer.music.play(-1)
 
         elif scene < 8:
@@ -412,7 +414,7 @@ def GAME_INTRO():
             if (event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN) or (event.type == pygame.JOYBUTTONDOWN and event.button == 7):
                 Run = False
                 if scene < 6 and MUSIC:
-                    pygame.mixer.music.load('code/assets/sounds/music/level_A.wav')
+                    pygame.mixer.music.load('code/assets/sounds/music/level_B.wav')
                     pygame.mixer.music.set_volume(e.settings['Music Volume']/10)
                     pygame.mixer.music.play(-1)
 
@@ -430,16 +432,17 @@ def GAME_INTRO():
 def REUNION_CUTSCENE():
     pygame.mixer.music.fadeout(1000)
     pygame.mixer.music.load('code/assets/sounds/music/reunion_A.wav')
+    priestess_anim = []
+    priestess_frame = 0
+    player_frame = 0
     scene = 0
     timer = 0
     text_p1 = ['C:Soleanna!','S:...Caelum?']
-    text_p2 = ['S:I\'m glad you found me.','C:You left no clues where you would be...','C:and yet I knew exactly where to find you.',
-            'S:I couldn\'t let anyone know where I was.','S:This was the one place only you and I know.','S:We can be alone here.',
-            'C:The sky is cracked. The animals have gone mad.','C:What is going on?','S:A great calamity has ripped through the atmosphere and slipped through to our surface.',
-            'S:This malice has been sending whispers in my mind.','S:It\'s looking for the light of the sun... It\'s looking for me.','S:Caelum, if it gets to me... if my prayers stop',
-            'S:then the sun will never rise again and the world will-','C:I know, and I want to help. Why did you leave without me?','S:It\'s not fair. You do so much for me and I give nothing in return.',
-            'S:I just hope and pray. I want to do more.','C:...','C:Soleanna, my strength comes from your light.','C:I fight because I don\'t want to live in a world without you.',
-            'S:The enemy is almost here. Our time has run up.','C:I\'ll fight and I\'ll win.','C:And then, we can watch the sun rise together.','S:Caelum, my guardian, my blue bird... I pray for your safe return.']
+    text_p2 = ['C:I\'ve been worried about you all|this time. You really scared me.', 'S:I\'m so sorry Caelum, but it was|important for us to be alone.',
+                'S:So I chose to hide myself in the|one place only you and I know.','C:The sky is shattered. The animals|have gone mad.','C:What is going on?',
+                'S:Something has broken the sky|barrier, which protects our world.','S:It wants to steal the light of the|sun.','C:Is it looking for you, the source|of that light?',
+                'S:Yes, and it needs to be stopped.','S:I have to stay here to keep the|light alive.','S:Caelum, my guardian... will you|fight for me?',
+                'C:Do you have to ask? I\'ll fight the|world itself to keep you safe.','S:Thank you. I am going to call it|here. Caelum... please come back safe.']
     fancy_font = Font('code/assets/fonts/fancy.png',0)
     dialog_box = DialogBox(text_p1,fancy_font,3)
     transition = Transition('FADE-IN',(255,255,255),0,5,CAMERA_SIZE)
@@ -450,7 +453,7 @@ def REUNION_CUTSCENE():
 
         if scene == 0:
             timer += 1
-            if timer == 10:
+            if timer == 5:
                 pygame.mixer.music.set_volume(e.settings['Music Volume']/10)
                 e.play_sound('door')
             if timer > 150:
@@ -471,13 +474,23 @@ def REUNION_CUTSCENE():
         
         elif scene == 2:
             camera.blit(e.tilesets_database['backgrounds_list']['options_screen'],(0,0))
+
+            for i in range(15):
+                camera.blit(e.tilesets_database['tiles_list']['carpet'],(i*16,CHUNK_SIZE[1]-16))
+
+            camera.blit(player.animation_frames_database[player.animation_database['idle'][player_frame]], (48,96))
+            player_frame += 1
+            if player_frame >= len(player.animation_database['idle']):
+                player_frame = 0
+
             camera.blit(transition.draw(), (0,0))
+
             if transition.end:
                 camera.blit(dialog_box.draw(), (0,0))
                 dialog_box.update()
                 if dialog_box.end:
                     scene += 1
-                    transition = Transition('FADE-IN',(255,255,255),0,3,CAMERA_SIZE)
+                    transition = Transition('FADE-IN',(255,255,255),0,2,CAMERA_SIZE)
         
         elif scene == 3:
             camera.blit(e.tilesets_database['backgrounds_list']['options_screen'],(0,0))
@@ -487,6 +500,8 @@ def REUNION_CUTSCENE():
             if transition.end:
                 pygame.mixer.music.load('code/assets/sounds/music/boss.wav')
                 pygame.mixer.music.set_volume(e.settings['Music Volume']/10)
+                if MUSIC:
+                        pygame.mixer.music.play(-1)
                 Run = False
         
         for event in pygame.event.get():
@@ -494,7 +509,14 @@ def REUNION_CUTSCENE():
                 e.joysticks = [pygame.joystick.Joystick(i) for i in range(pygame.joystick.get_count())]
             if event.type == pygame.JOYDEVICEREMOVED:
                 e.joysticks = [pygame.joystick.Joystick(i) for i in range(pygame.joystick.get_count())]
+                
             if (event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN) or (event.type == pygame.JOYBUTTONDOWN and event.button == 7):
+                pygame.mixer.music.load('code/assets/sounds/music/boss.wav')
+                pygame.mixer.music.set_volume(e.settings['Music Volume']/10)
+                if MUSIC:
+                        pygame.mixer.music.play(-1)
+                Run = False
+            elif event.type == pygame.KEYDOWN or event.type == pygame.JOYBUTTONDOWN:
                 dialog_box.next_line()
 
             if event.type == pygame.QUIT:
@@ -1009,6 +1031,7 @@ def GAME_LOOP():
 
 if __name__ == "__main__":
     #HOW_TO_PLAY()
+    #REUNION_CUTSCENE()
     START_SCREEN()
     #GAME_LOOP()
 

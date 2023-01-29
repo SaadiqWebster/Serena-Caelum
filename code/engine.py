@@ -6,6 +6,7 @@ pygame.mixer.pre_init(44100, -16, 2, 512)
 pygame.init()
 pygame.mixer.set_num_channels(50)
 pygame.display.set_caption('Serena Caelum')
+pygame.display.set_icon(pygame.image.load('code/assets/tilesets/tiles/icon.png'))
 pygame.joystick.init()
 WINDOW_SIZE = (720,480)
 CAMERA_SIZE = (240,160)
@@ -560,7 +561,7 @@ class Font:
         for char in text:
             if char == ' ':
                 width += self.space_width
-            else:
+            elif char != '|':
                 width += self.characters[char].get_width()
             width += self.spacing
         return width
@@ -590,6 +591,7 @@ class TextScroller:
         self.text = text  # list of strings
         self.color = color
         self.startoffset = startoffset
+        self.pointer_visible = False
 
         self.text_ptr = 0
         self.timer = 0
@@ -597,10 +599,13 @@ class TextScroller:
         self.next = True if len(self.text) > 1 else False
 
     def update(self):
-        if not self.end:
-            self.timer += 1
+        self.timer += 1
         
-        if self.timer >= self.delay:
+        if self.end and self.timer > 30:
+            self.timer = 0
+            self.pointer_visible = not self.pointer_visible
+
+        elif not self.end and self.timer >= self.delay:
             self.timer = 0
             if self.text_ptr + 1 >= len(self.text[0]):
                 self.end = True
@@ -608,9 +613,13 @@ class TextScroller:
                 self.text_ptr += 1
                 if self.text[0][self.text_ptr] != ' ':
                     play_sound('text')
+        
 
     def next_line(self):
-        if self.next:
+        if not self.end:
+            self.text_ptr = len(self.text[0])-1
+            self.end =  True
+        elif self.next:
             self.text.pop(0)
             self.text_ptr = 0
             self.end = False
@@ -632,6 +641,9 @@ class TextScroller:
             text_surf.blit(self.font.draw(self.text[0][i],color=self.color), (x_offset, y_offset))
             x_offset += char_width + self.font.spacing
         
+        if self.end and self.pointer_visible:
+            text_surf.blit(tilesets_database['tiles_list']['pointer'], (x_offset+2, y_offset+self.font.height-7) )
+        
         return text_surf
 
 
@@ -640,14 +652,16 @@ class DialogBox:
         self.width = CAMERA_SIZE[0]
         self.height = 38
         self.font = font
-        self.textscroller = TextScroller(text,font,(255,255,255),self.width-20,200,delay)
+        self.textscroller = TextScroller(text,font,(255,255,255),self.width-12,200,delay)
         self.speaker = self.get_speaker()
         self.textscroller.text[0] = self.textscroller.text[0][2:]
         self.textscroller.startoffset = self.font.get_width(self.speaker)
         self.end = False
 
     def next_line(self):
-        if self.textscroller.next:
+        if not self.textscroller.end:
+            self.textscroller.next_line()
+        elif self.textscroller.next:
             self.textscroller.next_line()
             self.speaker = self.get_speaker()
             self.textscroller.text[0] = self.textscroller.text[0][2:]
@@ -668,21 +682,9 @@ class DialogBox:
         if not self.end:
             text_surf.fill((0,0,0))
             
-            color = (80,185,235) if self.speaker == 'Caelum ' else (255,232,0)
-            shadow = (62,131,209) if self.speaker == 'Caelum ' else (62,131,209)
-            # shadow
-            #text_surf.blit(self.font.draw(self.speaker, shadow), (5,5))
-            self.textscroller.color = (100,100,100)
-            #text_surf.blit(self.textscroller.draw(), (5,4))
-            #text_surf.blit(self.textscroller.draw(), (5,5))
-            self.textscroller.color = (255,255,255)
-            # color
-            text_surf.blit(self.font.draw(self.speaker, color), (4,4))
+            speakercolor = (80,185,235) if self.speaker == 'Caelum ' else (255,232,0)
+            text_surf.blit(self.font.draw(self.speaker, speakercolor), (4,4))
             text_surf.blit(self.textscroller.draw(), (4,4))  
-
-            # pointer
-            if self.textscroller.end and not self.end:
-                text_surf.blit(tilesets_database['tiles_list']['pointer'], (CAMERA_SIZE[0]-12, self.height-12 + 2 * ((2/math.pi)*math.asin(math.sin(time.time()*math.pi*3)))) )
         else:
             text_surf.set_colorkey((0,0,0))
 

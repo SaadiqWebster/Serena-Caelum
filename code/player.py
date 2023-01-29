@@ -342,7 +342,6 @@ class Player:
             
             if self.alpha > 0 and (self.current_animation == 'walk-in' or self.current_animation == 'walk-out') and (self.current_frame == 1 or self.current_frame == 24):
                 self.play_sound('walk')
-            #elif self.current_animation == 'run' 
 
         if self.iframes:
             self.iframes_timer -= 1
