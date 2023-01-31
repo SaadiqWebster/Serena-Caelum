@@ -122,6 +122,7 @@ def START_SCREEN():
                     if select == 0:
                         game_win = GAME_INTRO()
                         pygame.mixer.music.load('code/assets/sounds/music/menu.wav')
+                        pygame.mixer.music.set_volume(e.settings['Music Volume']/10)
                         if MUSIC:
                             pygame.mixer.music.play(-1)
                     elif select == 1:
@@ -473,12 +474,12 @@ def REUNION_CUTSCENE():
                         pygame.mixer.music.play(-1)
         
         elif scene == 2:
-            camera.blit(e.tilesets_database['backgrounds_list']['options_screen'],(0,0))
+            camera.blit(e.tilesets_database['backgrounds_list']['cutscene_back'],(0,0))
 
             for i in range(15):
                 camera.blit(e.tilesets_database['tiles_list']['carpet'],(i*16,CHUNK_SIZE[1]-16))
 
-            camera.blit(player.animation_frames_database[player.animation_database['idle'][player_frame]], (48,96))
+            camera.blit(player.animation_frames_database[player.animation_database['idle'][player_frame]], (32,96))
             player_frame += 1
             if player_frame >= len(player.animation_database['idle']):
                 player_frame = 0
@@ -493,7 +494,7 @@ def REUNION_CUTSCENE():
                     transition = Transition('FADE-IN',(255,255,255),0,2,CAMERA_SIZE)
         
         elif scene == 3:
-            camera.blit(e.tilesets_database['backgrounds_list']['options_screen'],(0,0))
+            camera.blit(e.tilesets_database['backgrounds_list']['cutscene_back'],(0,0))
             pygame.mixer.music.fadeout(1000)
             camera.blit(transition.draw(), (0,0))
             
@@ -510,13 +511,9 @@ def REUNION_CUTSCENE():
             if event.type == pygame.JOYDEVICEREMOVED:
                 e.joysticks = [pygame.joystick.Joystick(i) for i in range(pygame.joystick.get_count())]
                 
-            if (event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN) or (event.type == pygame.JOYBUTTONDOWN and event.button == 7):
-                pygame.mixer.music.load('code/assets/sounds/music/boss.wav')
-                pygame.mixer.music.set_volume(e.settings['Music Volume']/10)
-                if MUSIC:
-                        pygame.mixer.music.play(-1)
-                Run = False
-            elif event.type == pygame.KEYDOWN or event.type == pygame.JOYBUTTONDOWN:
+            if (scene == 1 or scene == 2) and ((event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN) or (event.type == pygame.JOYBUTTONDOWN and event.button == 7)):
+                dialog_box.end = True
+            elif (scene == 1 or scene == 2) and (event.type == pygame.KEYDOWN or event.type == pygame.JOYBUTTONDOWN):
                 dialog_box.next_line()
 
             if event.type == pygame.QUIT:
@@ -945,7 +942,7 @@ def GAME_LOOP():
                 sys.exit()
 
 
-        # -- DRAW TRANSITION, HUD, PAUSE SCREEN
+        # -- DRAW TRANSITIONS, HUD, PAUSE SCREEN ---
         if player.x_state == 'TRANSITION_IN' and level_transition is None:
             level_transition = Transition('FADE-IN',(0,0,0),0,5,CAMERA_SIZE,object_collisions['gates'][0])
         
@@ -959,7 +956,7 @@ def GAME_LOOP():
                         hp, sp, inv, fairy, ftimer = player.health, player.special, player.inventory, player.fairy, player.item_timer
                         player.restart()
                         player.health, player.special, player.inventory, player.fairy, player.item_timer = hp, sp, inv, fairy, ftimer
-                        back_layer0 = None
+                        back_layer0 = SkyBackground(e.tilesets_database, CAMERA_SIZE, CHUNK_SIZE)
                         title_card = TitleCard('Defeat the Boss!')
                         full_transition = Transition('FADE-OUT',(255,255,255),255,3,CAMERA_SIZE)
                         level_transition = None

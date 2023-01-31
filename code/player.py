@@ -53,22 +53,23 @@ class Fairy:
             frame.set_alpha(0)
         return frame
     
-    def spawn_particle(self):
-        self.particle_q.append(self.Particle(self.cor[0]+random.randrange(0,12),self.cor[1]+random.randrange(0,12)))
+    def spawn_particle(self,duration=24):
+        self.particle_q.append(self.Particle(self.cor[0]+random.randrange(0,12),self.cor[1]+random.randrange(0,12),duration))
 
     class Particle:
-        def __init__(self,x,y):
+        def __init__(self,x,y,duration):
             self.cor = [x,y]
             self.image = pygame.image.load('code/assets/tilesets/tiles/dust.png')
             self.image.set_colorkey((0,255,0))
             self.timer = 0
             self.destroy = False
+            self.duration = duration
         
         def update(self):
             self.timer += 1
             if self.timer % 6 == 0:
                 self.cor[1] += 1
-            if self.timer > 24:
+            if self.timer > self.duration:
                 self.destroy = True
         
         def draw(self):
@@ -399,7 +400,7 @@ class Player:
                 self.play_sound('fairy')
                 self.fairy.visible = False
                 for i in range(7):
-                    self.fairy.spawn_particle()
+                    self.fairy.spawn_particle(random.randint(18,30))
         
         if self.ease_x:
             self.ease_x_timer -= 1

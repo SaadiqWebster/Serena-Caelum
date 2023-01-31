@@ -206,11 +206,6 @@ def fill_enemy_animation_database(path):
                 enemy_animation_database[directory][_dir] += [frame]*6
 fill_enemy_animation_database("code/assets/animations/enemies")
 
-# def fill_enemy_sounds_database(path):
-#     files = os.listdir(path)
-#     for f in files:
-#         enemy_sounds_database[f[:-4]] = pygame.mixer.Sound(path+'/'+f)
-# fill_enemy_sounds_database('code/assets/sounds/sfx/objects')
 
 class Enemy:
     def __init__(self, x, y):
@@ -220,7 +215,7 @@ class Enemy:
         self.rect = pygame.Rect(x, y, 16, 16)
         self.health = self.max_health
         self.velocity = [0,0]
-        self.gravity = 0.5
+        self.gravity = 0
         self.state = 'IDLE'
         self.item_drop = None
         self.DESTROY = False
@@ -722,3 +717,75 @@ class Lion(Enemy):
                             self.flip = not self.flip
                 else:
                     self.state = 'IDLE'
+
+
+# -- BOSS ---
+class Boss(Enemy):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.id = 'Boss'
+        self.max_health = 20
+        self.rect = pygame.Rect(x, y, 48, 48)
+        self.health = self.max_health
+        global enemy_animation_database
+        self.animation_database = enemy_animation_database[self.id]
+
+        self.cor = [x,y]
+        self.phase = 0
+        self.phase_time = 258
+    
+    def change_phase(self):
+        if self.phase != 0:
+            self.phase = 0
+            self.cor = [300,80]
+            self.phase_time = 120
+        else:
+            r = random.randint(1,1)
+            if r == 0:
+                self.cor = [96,32]
+                self.phase_time = 300
+            else:
+                self.phase = r
+                self.phase_time = 300
+                self.cor = [96,32]
+        
+        self.rect.x = self.cor[0]
+        self.rect.y = self.cor[1]
+
+    def update(self, floor_collisions, object_collisions, player):
+        super().update(floor_collisions, object_collisions, player)
+        if self.state != 'DESTROY':
+            print(self.state, self.phase, self.phase_time, self.cor)
+            self.gravity = 0
+            
+            self.phase_time = max(0, self.phase_time-1)
+            if self.state == 'IDLE' and self.phase_time <= 0:
+                    self.state = 'ATTACK'
+                    self.cor = [300,80]
+                    self.rect.x = self.cor[0]
+                    self.rect.y = self.cor[1]
+                    self.phase = 0
+                    self.phase_time = 180
+
+            if self.state == 'ATTACK':
+                # PHASE IS DONE
+                if self.phase_time <= 0:
+                    self.change_phase()
+
+                # RAINING MOON
+                if self.phase == 1:
+                    self.rect.x = self.cor[0] - math.sin(time.time()*1) * 88
+                    self.rect.y = self.cor[1] + (2/math.pi)*math.asin(math.sin(time.time()*math.pi*2)) * 2
+                
+                # SINGLE SHOT 
+                elif self.phase == 2:
+                    pass
+
+                # LIGHTNING
+                elif self.phase == 3:
+                    pass
+
+                # GIANT LAZER
+                elif self.phase == 4:
+                    pass
+                    
