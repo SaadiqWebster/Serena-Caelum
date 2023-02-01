@@ -475,7 +475,6 @@ def REUNION_CUTSCENE():
         
         elif scene == 2:
             camera.blit(e.tilesets_database['backgrounds_list']['cutscene_back'],(0,0))
-
             for i in range(15):
                 camera.blit(e.tilesets_database['tiles_list']['carpet'],(i*16,CHUNK_SIZE[1]-16))
 
@@ -491,11 +490,19 @@ def REUNION_CUTSCENE():
                 dialog_box.update()
                 if dialog_box.end:
                     scene += 1
+                    pygame.mixer.music.fadeout(1000)
                     transition = Transition('FADE-IN',(255,255,255),0,2,CAMERA_SIZE)
         
         elif scene == 3:
             camera.blit(e.tilesets_database['backgrounds_list']['cutscene_back'],(0,0))
-            pygame.mixer.music.fadeout(1000)
+            for i in range(15):
+                camera.blit(e.tilesets_database['tiles_list']['carpet'],(i*16,CHUNK_SIZE[1]-16))
+
+            camera.blit(player.animation_frames_database[player.animation_database['idle'][player_frame]], (32,96))
+            player_frame += 1
+            if player_frame >= len(player.animation_database['idle']):
+                player_frame = 0
+
             camera.blit(transition.draw(), (0,0))
             
             if transition.end:
@@ -511,9 +518,9 @@ def REUNION_CUTSCENE():
             if event.type == pygame.JOYDEVICEREMOVED:
                 e.joysticks = [pygame.joystick.Joystick(i) for i in range(pygame.joystick.get_count())]
                 
-            if (scene == 1 or scene == 2) and ((event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN) or (event.type == pygame.JOYBUTTONDOWN and event.button == 7)):
+            if (scene == 1 or scene == 2) and transition.transition_alpha <= 0 and ((event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN) or (event.type == pygame.JOYBUTTONDOWN and event.button == 7)):
                 dialog_box.end = True
-            elif (scene == 1 or scene == 2) and (event.type == pygame.KEYDOWN or event.type == pygame.JOYBUTTONDOWN):
+            elif (scene == 1 or scene == 2) and transition.transition_alpha <= 0 and (event.type == pygame.KEYDOWN or event.type == pygame.JOYBUTTONDOWN):
                 dialog_box.next_line()
 
             if event.type == pygame.QUIT:
@@ -577,6 +584,8 @@ def SPECIAL_MOVE():
         pygame.display.update()
         e.clock.tick(FPS)
 
+def BOSS_DEFEATED(enemy, player, score):
+    RESULTS_SCREEN((255,255,255), (80,185,235), (255,255,255), 'Well Done!', score)
 
 def GAME_OVER(player, camera_pos, score):
     player.white_shading = 0
@@ -605,7 +614,7 @@ def GAME_OVER(player, camera_pos, score):
             timer += 1
 
         if timer > 130:
-            RESULTS_SCREEN((0,0,0), (255,255,255), 'Try Again...', score)
+            RESULTS_SCREEN((0,0,0), (255,255,255), (100, 100, 100), 'Try Again...', score)
             Run = False
 
         for event in pygame.event.get():
@@ -618,9 +627,9 @@ def GAME_OVER(player, camera_pos, score):
         e.clock.tick(FPS)
 
 
-def RESULTS_SCREEN(back_color, font_color, header, score, shadow_color=(100, 100, 100)):
+def RESULTS_SCREEN(back_color, font_color, shadow_color, header, score):
     plain_font = Font('code/assets/fonts/plain.png')
-    transition = Transition('FADE-IN',(0,0,0),0,4,CAMERA_SIZE)
+    transition = Transition('FADE-IN',back_color,0,4,CAMERA_SIZE)
     results_surf = pygame.Surface(CAMERA_SIZE)
     results_surf.set_colorkey((0,0,0))
     score_stack = {}
@@ -685,6 +694,9 @@ def RESULTS_SCREEN(back_color, font_color, header, score, shadow_color=(100, 100
                     if score_stack[category] < score[category]:
                         score_stack[category] = score[category]
                         draw_transition = False
+
+                if draw_transition:
+                    pygame.mixer.music.fadeout(1000)
 
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -775,6 +787,11 @@ def GAME_LOOP():
                         
                 enemy.sound_volume = e.settings['Sound Volume']/10
                 enemy.update(floor_collisions, enemy_object_collisions, player)
+                if enemy.id == 'Boss' and enemy.health <= 0:
+                    score['Enemies Defeated'] += 1
+                    score['Total Time'] = time.time() - score['Total Time']
+                    BOSS_DEFEATED(enemy, player, score)
+                    return True
                 
                 if enemy.DESTROY:
                     if enemy.item_drop is not None:

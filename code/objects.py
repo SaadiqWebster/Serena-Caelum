@@ -721,7 +721,10 @@ class Lion(Enemy):
 
 # -- BOSS ---
 class Boss(Enemy):
-    def __init__(self, x, y):
+    def __init__(self):
+        x = 120-(48/2)
+        y = 80-(48/2)-16
+
         super().__init__(x, y)
         self.id = 'Boss'
         self.max_health = 20
@@ -731,61 +734,67 @@ class Boss(Enemy):
         self.animation_database = enemy_animation_database[self.id]
 
         self.cor = [x,y]
-        self.phase = 0
-        self.phase_time = 258
+        self.phase = -1
+        self.prev_phase = -1
+        self.phase_time = 330
     
     def change_phase(self):
-        if self.phase != 0:
+        if self.phase != 0: # WAIT PERIOD
+            self.rect.x = 300
+            self.rect.y = 80
+            self.prev_phase = self.phase
             self.phase = 0
-            self.cor = [300,80]
-            self.phase_time = 120
+            self.phase_time = 180 if self.health > self.max_health/2 else random.randint(60,180)
         else:
-            r = random.randint(1,1)
-            if r == 0:
-                self.cor = [96,32]
-                self.phase_time = 300
-            else:
+            r = random.randint(1,5)
+            if r != self.prev_phase or r == 2:
                 self.phase = r
-                self.phase_time = 300
-                self.cor = [96,32]
-        
-        self.rect.x = self.cor[0]
-        self.rect.y = self.cor[1]
+                if r == 1: # RAIN
+                    self.cor = [120-(self.rect.width/2),32]
+                    self.phase_time = random.randint(300,600)
+                elif r == 2: # SHOOT 
+                    self.cor[0] = 8 if random.randint(0,1) == 0 else 184
+                    self.cor[1] = random.randint(28,88)
+                    self.phase_time = 120
+                elif r == 3: # LIGHTNING
+                    self.cor = [120-(self.rect.width/2),28]
+                    self.phase_time = 300
+                elif r == 4: # GIANT LAZER
+                    self.cor = [300,80]
+                    self.phase_time = 300
+                else: # FREE HIT
+                    self.cor = [120-(self.rect.width/2),80-(self.rect.height/2)]
+                    self.phase_time = 300 if self.health > self.max_health/2 else random.randint(180,300)
+                
+                self.rect.x = self.cor[0]
+                self.rect.y = self.cor[1]
 
     def update(self, floor_collisions, object_collisions, player):
         super().update(floor_collisions, object_collisions, player)
         if self.state != 'DESTROY':
-            print(self.state, self.phase, self.phase_time, self.cor)
+            #print('current:',self.phase,'prev:',self.prev_phase,self.phase_time,self.cor)
             self.gravity = 0
             
             self.phase_time = max(0, self.phase_time-1)
-            if self.state == 'IDLE' and self.phase_time <= 0:
-                    self.state = 'ATTACK'
-                    self.cor = [300,80]
-                    self.rect.x = self.cor[0]
-                    self.rect.y = self.cor[1]
-                    self.phase = 0
-                    self.phase_time = 180
-
-            if self.state == 'ATTACK':
-                # PHASE IS DONE
-                if self.phase_time <= 0:
+            if self.phase_time <= 0:
                     self.change_phase()
 
-                # RAINING MOON
-                if self.phase == 1:
-                    self.rect.x = self.cor[0] - math.sin(time.time()*1) * 88
-                    self.rect.y = self.cor[1] + (2/math.pi)*math.asin(math.sin(time.time()*math.pi*2)) * 2
-                
-                # SINGLE SHOT 
-                elif self.phase == 2:
-                    pass
+            # RAIN
+            if self.phase == 1:
+                self.rect.x = self.cor[0] - math.sin(time.time()*1) * 88
+                self.rect.y = self.cor[1] + (2/math.pi)*math.asin(math.sin(time.time()*math.pi*2)) * 2
+            
+            elif self.phase == 2:
+                if self.phase_time == 59:
+                    self.rect.x += 176 if self.cor[0] < 120 else -176
+                    self.rect.y = random.randint(28,88)
 
-                # LIGHTNING
-                elif self.phase == 3:
-                    pass
+            elif self.phase == 3:
+                pass
 
-                # GIANT LAZER
-                elif self.phase == 4:
-                    pass
-                    
+            elif self.phase == 4:
+                pass
+            
+            # OTHER
+            else:
+                self.rect.y = self.cor[1] + (2/math.pi)*math.asin(math.sin(time.time()*math.pi*1)) * 2

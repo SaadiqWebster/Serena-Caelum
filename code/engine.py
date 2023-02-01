@@ -239,7 +239,7 @@ def spawn_objects(chunk):
                         obj = o.Ghost(x*TILE_SIZE[0] + chunk[0]*CHUNK_SIZE[0], y*TILE_SIZE[1] + chunk[1]*CHUNK_SIZE[1])
                         obj_list['enemies'].append(obj)
                     elif object[2:] == 'Boss':
-                        obj = o.Boss(x*TILE_SIZE[0] + chunk[0]*CHUNK_SIZE[0], y*TILE_SIZE[1] + chunk[1]*CHUNK_SIZE[1])
+                        obj = o.Boss()
                         obj_list['enemies'].append(obj)
                 x += 1
             y += 1
