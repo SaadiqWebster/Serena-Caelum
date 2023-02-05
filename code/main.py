@@ -761,6 +761,7 @@ def GAME_LOOP():
             player.sound_volume = e.settings['Sound Volume']/10
             player.update(floor_collisions, object_collisions)
             score['Damage Taken'] += prev_health - player.health
+            
             if player.health <= 0:
                 pygame.mixer.music.stop()
                 score['Total Time'] = time.time() - score['Total Time']
@@ -775,6 +776,7 @@ def GAME_LOOP():
             enemy_obj_list = {'player':[player]}
             enemy_obj_list['hitboxes'] = player.active_hitbox
             hud_target = None
+
             for enemy in obj_list['enemies']:
                 floor_collisions, enemy_object_collisions = move_and_test(enemy.rect, enemy.velocity, tile_rect_list, enemy_obj_list, enemy.id == 'Bean' or enemy.id == 'Joak')
                 
@@ -787,6 +789,9 @@ def GAME_LOOP():
                         
                 enemy.sound_volume = e.settings['Sound Volume']/10
                 enemy.update(floor_collisions, enemy_object_collisions, player)
+                obj_list['projectiles'] += enemy.projectile_q
+                enemy.projectile_q.clear()
+
                 if enemy.id == 'Boss' and enemy.health <= 0:
                     score['Enemies Defeated'] += 1
                     score['Total Time'] = time.time() - score['Total Time']
@@ -798,6 +803,17 @@ def GAME_LOOP():
                         obj_list['items'].append(enemy.item_drop)
                     obj_list['enemies'].remove(enemy)
                     score['Enemies Defeated'] += 1
+            
+            for projectile in obj_list['projectiles']:
+                floor_collisions, proj_object_collisions = move_and_test(projectile.rect, projectile.velocity, tile_rect_list, enemy_obj_list, True)
+                
+                if proj_object_collisions['hitboxes'] and proj_object_collisions['hitboxes'][0].id == 'guardbox':
+                    player.guard()
+                    player.increase_special(projectile.damage)
+
+                projectile.update()
+                if projectile.DESTROY:
+                    obj_list['projectiles'].remove(projectile)
 
 
             for item in obj_list['items']:
@@ -848,6 +864,8 @@ def GAME_LOOP():
             camera.blit(item.draw(),(item.rect.x-camera_pos[0], item.rect.y+y_offset-camera_pos[1]))
         for enemy in obj_list['enemies']:
             camera.blit(enemy.draw(),(enemy.rect.x-16-camera_pos[0], enemy.rect.y-16-camera_pos[1]))
+        for projectile in obj_list['projectiles']:
+            camera.blit(projectile.draw(),(projectile.rect.x-camera_pos[0], projectile.rect.y-camera_pos[1]))
 
         for image in player.afterimage_q.q:
             camera.blit(image.draw(), (image.x-camera_pos[0],image.y-camera_pos[1]))

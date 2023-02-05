@@ -133,7 +133,7 @@ class Player:
         self.inventory_size = 3
         self.velocity = [0,0]
         self.rect = pygame.Rect(x, y, 15, 32)
-        self.gravity = 0.5
+        self.gravity = 0
         self.x_state = 'IDLE'
         self.y_state = 'IDLE'
         
@@ -188,7 +188,7 @@ class Player:
         self.velocity = [0,0]
         self.rect.x = 16*7
         self.rect.y = 16*7
-        self.gravity = 0.5
+        self.gravity = 0
         self.x_state = 'IDLE'
         self.y_state = 'IDLE'
         self.animation_play = 'LOOP'
@@ -287,6 +287,37 @@ class Player:
         self.input_buffer_timer = 0
         self.input_buffer = False
         self.hitbox_q = []
+    
+    def damage(self, object):
+        if self.x_state != 'DAMAGE' and self.x_state != 'TRANSITION_IN' and self.x_state != 'TRANSITION_OUT' and not self.iframes:
+            self.play_sound('damage')
+            self.health -= object.damage
+            self.increase_special(object.damage)
+
+            if self.x_state == 'DUCK':
+                self.rect = pygame.Rect(self.rect.x, self.rect.y - self.rect.height, self.rect.width, self.rect.height * 2)
+                
+            self.x_state = 'DAMAGE'
+            self.y_state = 'JUMP 2'
+            self.gravity = -2
+            self.set_animation('slide',0,'ONCE')
+            self.white_shading = 255
+            self.white_shade_timer = 10
+
+            self.ease_x = False
+            self.ease_x_timer = 0
+            self.input_buffer_timer = 0
+            self.input_buffer = False
+            self.after_image = False
+            self.hitbox_q = []
+
+            if self.velocity[0] == 0:
+                self.velocity[0] = 1
+            else:
+                self.velocity[0] = abs(self.velocity[0])
+
+            if not self.flip:
+                self.velocity[0] *= -1
 
     def use_item(self, id):
         if id == 0:
@@ -302,7 +333,6 @@ class Player:
             self.fairy.visible = True
             self.play_sound('fairy')
             
-
     def increase_special(self, amount):
         if self.special != 20 and self.special + amount >= 20:
             self.play_sound('special_ready')
@@ -329,7 +359,8 @@ class Player:
                 if not self.flip or (not self.key[pygame.K_LEFT] and not self.key[pygame.K_a] and not self.button[10]):
                     self.velocity[0] = 2
 
-        self.velocity[1] += self.gravity
+        self.gravity = min(10, self.gravity + 0.275)
+        self.velocity[1] = self.gravity
     
     def update_timer_events(self):
         if self.animation_play != 'STOP':
@@ -441,11 +472,6 @@ class Player:
         
         self.update_timer_events()
         self.update_hitbox_q()
-
-        self.velocity[1] = 0
-        self.gravity += 0.275
-        if self.gravity > 10:
-            self.gravity = 10
         
         player_cor = [self.rect.x,self.rect.y]
         if self.flip:
@@ -459,36 +485,13 @@ class Player:
             self.inventory.append(object_collisions['items'][0])
             self.play_sound('item_get')
 
-        if object_collisions['enemies'] and object_collisions['enemies'][0].state != 'DESTROY' and self.x_state != 'DAMAGE' and self.x_state != 'TRANSITION_IN' and self.x_state != 'TRANSITION_OUT' and not self.iframes:
-            self.play_sound('damage')
-            self.health -= object_collisions['enemies'][0].damage
-            self.increase_special(object_collisions['enemies'][0].damage)
-
-            if self.x_state == 'DUCK':
-                self.rect = pygame.Rect(self.rect.x, self.rect.y - self.rect.height, self.rect.width, self.rect.height * 2)
-            
-            self.x_state = 'DAMAGE'
-            self.y_state = 'JUMP 2'
-            self.gravity = -2
-            self.set_animation('slide',0,'ONCE')
-            self.white_shading = 255
-            self.white_shade_timer = 10
-
-            self.ease_x = False
-            self.ease_x_timer = 0
-            self.input_buffer_timer = 0
-            self.input_buffer = False
-            self.after_image = False
-            self.hitbox_q = []
+        if object_collisions['enemies'] and object_collisions['enemies'][0].state != 'DESTROY':
+            self.damage(object_collisions['enemies'][0])
             floor_collisions['bottom'] = False
 
-            if self.velocity[0] == 0:
-                self.velocity[0] = 1
-            else:
-                self.velocity[0] = abs(self.velocity[0])
-
-            if not self.flip:
-                self.velocity[0] *= -1
+        if object_collisions['projectiles']:
+            self.damage(object_collisions['projectiles'][0])
+            floor_collisions['bottom'] = False
 
         if self.x_state == 'SPECIAL':
             self.set_animation('special',0,'ONCE')

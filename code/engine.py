@@ -33,7 +33,7 @@ tilesets_database = {}
 sounds_database = {}
 
 tile_rect_list = {}
-obj_list = {'gates':[], 'enemies':[], 'items':[], 'particles':[]}
+obj_list = {'gates':[], 'enemies':[], 'items':[], 'projectiles':[]}
 level_config = {}
 current_chunk = [0,0]
 

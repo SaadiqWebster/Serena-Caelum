@@ -218,6 +218,7 @@ class Enemy:
         self.gravity = 0
         self.state = 'IDLE'
         self.item_drop = None
+        self.projectile_q = []
         self.DESTROY = False
 
         self.animation_database = {}
@@ -719,6 +720,47 @@ class Lion(Enemy):
                     self.state = 'IDLE'
 
 
+# -- PROJECTILES ---
+class Projectile:
+    def __init__(self, x, y, width, height, damage, duration, anim):
+        self.rect = pygame.Rect(x,y,width,height)
+        self.duration = duration
+        self.timer = 0
+        self.velocity = [0,0]
+        self.damage = damage
+        self.DESTROY = False
+
+        global enemy_animation_database
+        self.animation = enemy_animation_database['projectiles'][anim]
+        self.current_frame = 0
+
+    def draw(self):
+        return self.animation[self.current_frame]
+
+    def update(self):
+        self.current_frame += 1
+        if self.current_frame >= len(self.animation):
+            self.current_frame = 0
+            
+        self.timer += 1
+        if self.timer >= self.duration:
+            self.DESTROY = True
+
+class ShootProjectile(Projectile):
+    def __init__(self, x, y, width, height, damage, duration, velocity):
+        super().__init__(x, y, width, height, damage, duration, 'moon')
+        self.velocity = velocity
+
+class JumpProjectile(Projectile):
+    def __init__(self, x, y, width, height, damage, duration):
+        super().__init__(x, y, width, height, damage, duration, 'moon')
+        self.velocity[1] = -5
+
+    def update(self):
+        super().update()
+        self.velocity[1] = min(10, self.velocity[1] + 0.2)
+
+
 # -- BOSS ---
 class Boss(Enemy):
     def __init__(self):
@@ -755,13 +797,13 @@ class Boss(Enemy):
                 elif r == 2: # SHOOT 
                     self.cor[0] = 8 if random.randint(0,1) == 0 else 184
                     self.cor[1] = random.randint(28,88)
-                    self.phase_time = 120
+                    self.phase_time = 240
                 elif r == 3: # LIGHTNING
                     self.cor = [120-(self.rect.width/2),28]
-                    self.phase_time = 300
+                    self.phase_time = 243
                 elif r == 4: # GIANT LAZER
                     self.cor = [300,80]
-                    self.phase_time = 300
+                    self.phase_time = 600
                 else: # FREE HIT
                     self.cor = [120-(self.rect.width/2),80-(self.rect.height/2)]
                     self.phase_time = 300 if self.health > self.max_health/2 else random.randint(180,300)
@@ -783,18 +825,38 @@ class Boss(Enemy):
             if self.phase == 1:
                 self.rect.x = self.cor[0] - math.sin(time.time()*1) * 88
                 self.rect.y = self.cor[1] + (2/math.pi)*math.asin(math.sin(time.time()*math.pi*2)) * 2
+                if self.phase_time % 90 == 0:
+                    self.projectile_q.append(JumpProjectile(self.rect.x+16, self.rect.y+16, 16, 16, 1, 300))
             
+            # SHOOT
             elif self.phase == 2:
-                if self.phase_time == 59:
+                if self.phase_time == 120 or self.phase_time == 1:  
+                    x_vel = 2 if player.rect.x+8 > self.rect.x else -2
+                    y_vel = 2 if player.rect.y+16 > self.rect.y else -2
+                    self.projectile_q.append(ShootProjectile(self.rect.x+16, self.rect.y+16, 16, 16, 1, 300, [x_vel,y_vel]))
+                
+                if self.phase_time == 120:
                     self.rect.x += 176 if self.cor[0] < 120 else -176
                     self.rect.y = random.randint(28,88)
-
+ 
+            # LIGHTNING
             elif self.phase == 3:
-                pass
+                if self.phase_time == 122:
+                    self.projectile_q.append(Projectile(self.rect.x-128, 0, 48, 160, 1, 6, 'moon'))
+                    self.projectile_q.append(Projectile(self.rect.x+128, 0, 48, 160, 1, 6, 'moon'))
+                if self.phase_time == 101:
+                    self.projectile_q.append(Projectile(self.rect.x-64, 0, 48, 160, 1, 6, 'moon'))
+                    self.projectile_q.append(Projectile(self.rect.x+64, 0, 48, 160, 1, 6, 'moon'))
+                if self.phase_time == 65:
+                    self.projectile_q.append(Projectile(self.rect.x,0, 48, 160, 1, 6, 'moon'))
 
+            # GIANT LAZER
             elif self.phase == 4:
-                pass
+                if self.phase_time == 479:
+                    self.projectile_q.append(Projectile(0, 48, 240, 48, 1, 240, 'moon'))
+                if self.phase_time == 359:
+                    self.projectile_q.append(Projectile(0, 80, 240,48, 1, 240, 'moon'))
             
-            # OTHER
+            # OTHER / FREE HIT
             else:
                 self.rect.y = self.cor[1] + (2/math.pi)*math.asin(math.sin(time.time()*math.pi*1)) * 2
