@@ -797,11 +797,11 @@ class Boss(Enemy):
                 elif r == 2: # SHOOT 
                     self.cor[0] = 8 if random.randint(0,1) == 0 else 184
                     self.cor[1] = random.randint(28,88)
-                    self.phase_time = 240
+                    self.phase_time = 120
                 elif r == 3: # LIGHTNING
                     self.cor = [120-(self.rect.width/2),28]
                     self.phase_time = 243
-                elif r == 4: # GIANT LAZER
+                elif r == 4: # BEAM
                     self.cor = [300,80]
                     self.phase_time = 600
                 else: # FREE HIT
@@ -830,32 +830,32 @@ class Boss(Enemy):
             
             # SHOOT
             elif self.phase == 2:
-                if self.phase_time == 120 or self.phase_time == 1:  
+                if self.phase_time == 60 or self.phase_time == 1:  
                     x_vel = 2 if player.rect.x+8 > self.rect.x else -2
                     y_vel = 2 if player.rect.y+16 > self.rect.y else -2
                     self.projectile_q.append(ShootProjectile(self.rect.x+16, self.rect.y+16, 16, 16, 1, 300, [x_vel,y_vel]))
                 
-                if self.phase_time == 120:
+                if self.phase_time == 60:
                     self.rect.x += 176 if self.cor[0] < 120 else -176
                     self.rect.y = random.randint(28,88)
- 
+
             # LIGHTNING
             elif self.phase == 3:
                 if self.phase_time == 122:
-                    self.projectile_q.append(Projectile(self.rect.x-128, 0, 48, 160, 1, 6, 'moon'))
-                    self.projectile_q.append(Projectile(self.rect.x+128, 0, 48, 160, 1, 6, 'moon'))
+                    self.projectile_q.append(Projectile(8, 0, 48, 160, 1, 6, 'lightning'))
+                    self.projectile_q.append(Projectile(184, 0, 48, 160, 1, 6, 'lightning'))
                 if self.phase_time == 101:
-                    self.projectile_q.append(Projectile(self.rect.x-64, 0, 48, 160, 1, 6, 'moon'))
-                    self.projectile_q.append(Projectile(self.rect.x+64, 0, 48, 160, 1, 6, 'moon'))
+                    self.projectile_q.append(Projectile(self.rect.x-64, 0, 48, 160, 1, 6, 'lightning'))
+                    self.projectile_q.append(Projectile(self.rect.x+64, 0, 48, 160, 1, 6, 'lightning'))
                 if self.phase_time == 65:
-                    self.projectile_q.append(Projectile(self.rect.x,0, 48, 160, 1, 6, 'moon'))
+                    self.projectile_q.append(Projectile(self.rect.x,0, 48, 160, 1, 6, 'lightning'))
 
-            # GIANT LAZER
+            # BEAM
             elif self.phase == 4:
                 if self.phase_time == 479:
-                    self.projectile_q.append(Projectile(0, 48, 240, 48, 1, 240, 'moon'))
+                    self.projectile_q.append(Projectile(0, 32, 240, 32, 1, 240, 'beam'))
                 if self.phase_time == 359:
-                    self.projectile_q.append(Projectile(0, 80, 240,48, 1, 240, 'moon'))
+                    self.projectile_q.append(Projectile(0, 92, 240, 32, 1, 240, 'beam'))
             
             # OTHER / FREE HIT
             else:

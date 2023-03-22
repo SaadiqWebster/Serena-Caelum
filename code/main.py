@@ -7,7 +7,7 @@ from objects import *
 #### command to use pyinstaller
 
 # for debug
-MUSIC = False
+MUSIC = True
 
 def START_SCREEN():
     pygame.mixer.music.load('code/assets/sounds/music/menu.wav')
@@ -446,7 +446,7 @@ def REUNION_CUTSCENE():
                 'C:Do you have to ask? I\'ll fight the|world itself to keep you safe.','S:Thank you. I am going to call it|here. Caelum... please come back safe.']
     fancy_font = Font('code/assets/fonts/fancy.png',0)
     dialog_box = DialogBox(text_p1,fancy_font,3)
-    transition = Transition('FADE-IN',(255,255,255),0,5,CAMERA_SIZE)
+    transition = Transition('FADE-IN',(255,255,255),0,3,CAMERA_SIZE)
     Run = True
 
     while Run:
@@ -469,7 +469,7 @@ def REUNION_CUTSCENE():
                 if transition.end:
                     scene += 1
                     dialog_box = DialogBox(text_p2,fancy_font,3)
-                    transition = Transition('FADE-OUT',(255,255,255),255,3,CAMERA_SIZE)
+                    transition = Transition('FADE-OUT',(255,255,255),255,2,CAMERA_SIZE)
                     if MUSIC:
                         pygame.mixer.music.play(-1)
         
@@ -584,8 +584,10 @@ def SPECIAL_MOVE():
         pygame.display.update()
         e.clock.tick(FPS)
 
+
 def BOSS_DEFEATED(enemy, player, score):
     RESULTS_SCREEN((255,255,255), (80,185,235), (255,255,255), 'Well Done!', score)
+
 
 def GAME_OVER(player, camera_pos, score):
     player.white_shading = 0
@@ -772,9 +774,9 @@ def GAME_LOOP():
                 special_transition = SpecialTransition(player.rect.x+(player.rect.width / 2)-camera_pos[0], CAMERA_SIZE)
                 score['No. of Specials Used'] += 1
 
-
             enemy_obj_list = {'player':[player]}
             enemy_obj_list['hitboxes'] = player.active_hitbox
+            player.active_hitbox = []
             hud_target = None
 
             for enemy in obj_list['enemies']:
@@ -822,26 +824,7 @@ def GAME_LOOP():
                     item.destroy()
                 if item.DESTROY:
                     obj_list['items'].remove(item)
-        # -- DEBUG ---
-        # for _list in e.tile_rect_list:
-        #     for rect in e.tile_rect_list[_list]:
-        #         pygame.draw.rect(camera, (255,255,255), rect, 1)
-
-        # pygame.draw.rect(camera, (0,0,255), player.rect, 1)
-
-        # for enemy in obj_list['enemies']:
-        #     pygame.draw.rect(camera, (255,255,0), enemy.rect, 1)
-
-        # for item in obj_list['items']:
-        #     pygame.draw.rect(camera, (0,255,255), item.rect, 1)
-
-        # for hitbox in player.active_hitbox:
-        #     if hitbox.id == 'guardbox':
-        #         pygame.draw.rect(camera, GREEN, hitbox.rect, 1)
-        #     else:
-        #         pygame.draw.rect(camera, RED, hitbox.rect, 1)
-        player.active_hitbox.clear()
-        
+            
 
         # -- DRAW EVENTS ---
         if back_layer0 is not None:

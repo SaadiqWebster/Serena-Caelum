@@ -288,7 +288,7 @@ class Player:
         self.input_buffer = False
         self.hitbox_q = []
     
-    def damage(self, object):
+    def damage(self, object, floor_collisions):
         if self.x_state != 'DAMAGE' and self.x_state != 'TRANSITION_IN' and self.x_state != 'TRANSITION_OUT' and not self.iframes:
             self.play_sound('damage')
             self.health -= object.damage
@@ -315,9 +315,12 @@ class Player:
                 self.velocity[0] = 1
             else:
                 self.velocity[0] = abs(self.velocity[0])
-
             if not self.flip:
                 self.velocity[0] *= -1
+
+            floor_collisions['bottom'] = False
+
+        return floor_collisions
 
     def use_item(self, id):
         if id == 0:
@@ -486,12 +489,10 @@ class Player:
             self.play_sound('item_get')
 
         if object_collisions['enemies'] and object_collisions['enemies'][0].state != 'DESTROY':
-            self.damage(object_collisions['enemies'][0])
-            floor_collisions['bottom'] = False
+            floor_collisions = self.damage(object_collisions['enemies'][0], floor_collisions)
 
         if object_collisions['projectiles']:
-            self.damage(object_collisions['projectiles'][0])
-            floor_collisions['bottom'] = False
+            floor_collisions = self.damage(object_collisions['projectiles'][0], floor_collisions)
 
         if self.x_state == 'SPECIAL':
             self.set_animation('special',0,'ONCE')
