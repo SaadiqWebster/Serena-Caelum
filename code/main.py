@@ -7,7 +7,7 @@ from objects import *
 #### command to use pyinstaller
 
 # for debug
-MUSIC = True
+MUSIC = False
 
 def START_SCREEN():
     pygame.mixer.music.load('code/assets/sounds/music/menu.wav')
@@ -441,9 +441,9 @@ def REUNION_CUTSCENE():
     text_p1 = ['C:Soleanna!','S:...Caelum?']
     text_p2 = ['C:I\'ve been worried about you all|this time. You really scared me.', 'S:I\'m so sorry Caelum, but it was|important for us to be alone.',
                 'S:So I chose to hide myself in the|one place only you and I know.','C:The sky is shattered. The animals|have gone mad.','C:What is going on?',
-                'S:Something has broken the sky|barrier, which protects our world.','S:It wants to steal the light of the|sun.','C:Is it looking for you, the source|of that light?',
-                'S:Yes, and it needs to be stopped.','S:I have to stay here to keep the|light alive.','S:Caelum, my guardian... will you|fight for me?',
-                'C:Do you have to ask? I\'ll fight the|world itself to keep you safe.','S:Thank you. I am going to call it|here. Caelum... please come back safe.']
+                'S:A calamity has broken the sky|barrier, which protects our world.','S:It wants to steal the light of the|sun.','C:Is it looking for you, the source|of that light?',
+                'S:Yes, and it needs to be stopped.','S:If I intensify the sun\'s shine, the|invader will be clearly visible.','S:Caelum, my guardian... will you|fight for me?',
+                'C:Do you have to ask? I\'ll fight the|world itself to keep you safe.','S:Once I begin it will come to us.|Caelum... we will win.']
     fancy_font = Font('code/assets/fonts/fancy.png',0)
     dialog_box = DialogBox(text_p1,fancy_font,3)
     transition = Transition('FADE-IN',(255,255,255),0,3,CAMERA_SIZE)
@@ -974,7 +974,7 @@ def GAME_LOOP():
                         hp, sp, inv, fairy, ftimer = player.health, player.special, player.inventory, player.fairy, player.item_timer
                         player.restart()
                         player.health, player.special, player.inventory, player.fairy, player.item_timer = hp, sp, inv, fairy, ftimer
-                        back_layer0 = SkyBackground(e.tilesets_database, CAMERA_SIZE, CHUNK_SIZE)
+                        back_layer0 = BossBackground(e.tilesets_database, CAMERA_SIZE, CHUNK_SIZE, COLORSET, GREYSCALE)
                         title_card = TitleCard('Defeat the Boss!')
                         full_transition = Transition('FADE-OUT',(255,255,255),255,3,CAMERA_SIZE)
                         level_transition = None

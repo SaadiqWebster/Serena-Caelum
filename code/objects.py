@@ -105,9 +105,68 @@ class SkyBackground:
         self.background.blit(self.tilesets_database['backgrounds_list']['sky_layer2'],(self.cor_top[0]+self.CHUNK_SIZE[0],self.cor_top[1]))
         self.background.blit(self.tilesets_database['backgrounds_list']['sky_layer2'],(self.cor_top[0]-self.CHUNK_SIZE[0],self.cor_top[1]))
         return self.background
+
+class BossBackground:
+    def __init__(self, tilesets_database, CAMERA_SIZE, CHUNK_SIZE, COLORSET, GREYSCALE):
+        self.CHUNK_SIZE = CHUNK_SIZE
+        self.COLORSET = COLORSET
+        self.GREYSCALE = GREYSCALE
+        self.background = pygame.Surface(CAMERA_SIZE)
+        self.skybox_index = 0 
+        self.greyscale_index = [0,0,170,340]
+        self.greyscale_velocity = [1,3,3,3]
+        self.x_pos = [0,0,0]
+        self.x_velocity = [-1,-2,-3]
+        self.tilesets_database = tilesets_database
+    
+    def palette_swap(self, img, old_color, new_color):
+        img_copy = pygame.Surface(img.get_size())
+        img_copy.fill(new_color)
+        img.set_colorkey(old_color)
+        img_copy.blit(img,(0,0))
+        return img_copy
+    
+    def update(self):
+        self.skybox_index += 1
+        if self.skybox_index >= len(self.COLORSET):
+            self.skybox_index = 0
+
+        for i in range(len(self.greyscale_index)):
+            self.greyscale_index[i] += self.greyscale_velocity[i]
+            if self.greyscale_index[i] >= len(self.GREYSCALE):
+                self.greyscale_index[i]= 0
+
+        for i in range(len(self.x_pos)):
+            self.x_pos[i] += self.x_velocity[i]
+            if self.x_pos[i] > self.CHUNK_SIZE[0]:
+                self.x_pos[i] -= self.CHUNK_SIZE[0]
+            elif self.x_pos[i] < 0-self.CHUNK_SIZE[0]:
+                self.x_pos[i] += self.CHUNK_SIZE[0]
+
+
+    def draw(self):
+        crack_layer = self.palette_swap(self.tilesets_database['backgrounds_list']['cracked_sky'], (255,255,255), self.GREYSCALE[self.greyscale_index[0]])
+        #crack_layer = self.palette_swap(self.tilesets_database['backgrounds_list']['cracked_sky'], (255,255,255), self.COLORSET[self.skybox_index])
+        crack_layer.set_colorkey((0,0,0))
+
+        self.background.fill(self.COLORSET[self.skybox_index])
+        #self.background.fill(self.GREYSCALE[self.greyscale_index[0]])
+        self.background.blit(crack_layer, (0,0))
+
+        self.background.blit(self.tilesets_database['backgrounds_list']['boss_layer1'], (0,0))
         
+        for i in range(2, len(self.x_pos)+2):
+            cloud_layer = self.palette_swap(self.tilesets_database['backgrounds_list']['boss_layer'+str(i)], (255,255,255), self.GREYSCALE[self.greyscale_index[i-1]])
+            cloud_layer.set_colorkey((0,0,0))
+
+            self.background.blit(cloud_layer, (self.x_pos[i-2],0))
+            self.background.blit(cloud_layer, (self.x_pos[i-2]-self.CHUNK_SIZE[0],0))
+            self.background.blit(cloud_layer, (self.x_pos[i-2]+self.CHUNK_SIZE[0],0))
+
+        return self.background
+
 class Gate:
-     def __init__(self, level, id, rect):
+    def __init__(self, level, id, rect):
         self.level = level
         self.id = id
         self.rect = rect
@@ -765,7 +824,7 @@ class JumpProjectile(Projectile):
 class Boss(Enemy):
     def __init__(self):
         x = 120-(48/2)
-        y = 80-(48/2)-16
+        y = 87-(48/2)-16
 
         super().__init__(x, y)
         self.id = 'Boss'
@@ -805,7 +864,7 @@ class Boss(Enemy):
                     self.cor = [300,80]
                     self.phase_time = 600
                 else: # FREE HIT
-                    self.cor = [120-(self.rect.width/2),80-(self.rect.height/2)]
+                    self.cor = [120-(self.rect.width/2),70-(self.rect.height/2)]
                     self.phase_time = 300 if self.health > self.max_health/2 else random.randint(180,300)
                 
                 self.rect.x = self.cor[0]

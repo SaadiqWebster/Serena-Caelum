@@ -645,7 +645,7 @@ class TextScroller:
             x_offset += char_width + self.font.spacing
         
         if self.end and self.pointer_visible:
-            text_surf.blit(tilesets_database['tiles_list']['pointer'], (x_offset+2, y_offset+self.font.height-7) )
+            text_surf.blit(tilesets_database['tiles_list']['pointer'], (x_offset+2, y_offset+self.font.height-6) )
         
         return text_surf
 

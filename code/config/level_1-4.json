@@ -8,7 +8,9 @@
                 "D": [[0,0],[16,7]]
         },
 
-        "background_layers": {},
+        "background_layers": {
+                "layer_1": ["boss_layer5_2",0]
+        },
 
         "foreground_layers": {},
 
