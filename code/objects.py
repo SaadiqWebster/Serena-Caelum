@@ -146,11 +146,11 @@ class BossBackground:
 
     def draw(self):
         crack_layer = self.palette_swap(self.tilesets_database['backgrounds_list']['cracked_sky'], (255,255,255), self.GREYSCALE[self.greyscale_index[0]])
-        #crack_layer = self.palette_swap(self.tilesets_database['backgrounds_list']['cracked_sky'], (255,255,255), self.COLORSET[self.skybox_index])
+        crack_layer = self.palette_swap(self.tilesets_database['backgrounds_list']['cracked_sky'], (255,255,255), self.COLORSET[self.skybox_index])
         crack_layer.set_colorkey((0,0,0))
 
         self.background.fill(self.COLORSET[self.skybox_index])
-        #self.background.fill(self.GREYSCALE[self.greyscale_index[0]])
+        self.background.fill(self.GREYSCALE[self.greyscale_index[0]])
         self.background.blit(crack_layer, (0,0))
 
         self.background.blit(self.tilesets_database['backgrounds_list']['boss_layer1'], (0,0))
@@ -174,7 +174,7 @@ class Gate:
 class Waterfall:
     def __init__(self,x,y):
         self.rect = pygame.Rect(x,y,16,16)
-        img_loc = 'code/assets/animations/objects/waterfall/'
+        img_loc = 'assets/animations/objects/waterfall/'
         self.animation = []
         self.current_frame = 0
         for i in range(1,5):
@@ -205,10 +205,10 @@ class Item:
             3:"Restores full special",
             4:"Doubles damage given"
         }
-        self.item_img = pygame.image.load('code/assets/tilesets/tiles/'+self.name[self.id]+'.png').convert()
+        self.item_img = pygame.image.load('assets/tilesets/tiles/'+self.name[self.id]+'.png').convert()
         self.item_img.set_colorkey((0,255,0))
         self.animation_frames_database = {}
-        self.animation = self.load_animation('code/assets/animations/objects/item-bubble',[60]+[6]*5)
+        self.animation = self.load_animation('assets/animations/objects/item-bubble',[60]+[6]*5)
         self.current_frame = 0
         self.DESTROY = False
         
@@ -263,7 +263,7 @@ def fill_enemy_animation_database(path):
                 frame = pygame.image.load(path+'/'+directory+'/'+_dir+'/'+_dir+'_'+str(i+1)+'.png')
                 frame.set_colorkey((0,255,0))
                 enemy_animation_database[directory][_dir] += [frame]*6
-fill_enemy_animation_database("code/assets/animations/enemies")
+fill_enemy_animation_database("assets/animations/enemies")
 
 
 class Enemy:
@@ -690,10 +690,10 @@ class Bird(Enemy):
                         self.state = 'FLY'
                         self.timer = 60
                     
-class Lion(Enemy):
+class Wolf(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.id = 'Lion'
+        self.id = 'Weulf'
         self.max_health = 3
         self.damage = 2
         self.rect = pygame.Rect(x, y, 32, 16)
@@ -714,12 +714,14 @@ class Lion(Enemy):
                     if self.state == 'JUMP' and self.timer > self.timer_cap:
                         self.state = 'WAIT'
                         self.timer = 0
+                        self.timer_cap = 90
 
             if self.state == 'WAIT':
                 self.velocity[0] = 0
                 self.timer += 1
                 if self.timer >= self.timer_cap:
                     self.timer = 0
+                    self.timer_cap = 30
                     self.flip = False if player.rect.x > self.rect.x else True
                     if player.rect.x > self.rect.x-32 and player.rect.x < self.rect.x+48:
                         self.state = 'JUMP'
@@ -884,14 +886,15 @@ class Boss(Enemy):
             if self.phase == 1:
                 self.rect.x = self.cor[0] - math.sin(time.time()*1) * 88
                 self.rect.y = self.cor[1] + (2/math.pi)*math.asin(math.sin(time.time()*math.pi*2)) * 2
-                if self.phase_time % 90 == 0:
+                if self.phase_time % 45 == 0:
                     self.projectile_q.append(JumpProjectile(self.rect.x+16, self.rect.y+16, 16, 16, 1, 300))
             
             # SHOOT
             elif self.phase == 2:
                 if self.phase_time == 60 or self.phase_time == 1:  
-                    x_vel = 2 if player.rect.x+8 > self.rect.x else -2
-                    y_vel = 2 if player.rect.y+16 > self.rect.y else -2
+                    angle = math.atan2(player.rect.y-self.rect.y+16+8, player.rect.x-self.rect.x+16+8)
+                    x_vel = int(math.cos(angle)*4)
+                    y_vel = int(math.sin(angle)*4)
                     self.projectile_q.append(ShootProjectile(self.rect.x+16, self.rect.y+16, 16, 16, 1, 300, [x_vel,y_vel]))
                 
                 if self.phase_time == 60:

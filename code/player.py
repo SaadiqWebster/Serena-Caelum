@@ -1,10 +1,9 @@
 import pygame, math, random, time, copy
 
-
 class Fairy:
     def __init__(self,x,y):
         self.cor = [x,y]
-        img_loc = 'code/assets/animations/objects/fairy/'
+        img_loc = 'assets/animations/objects/fairy/'
         self.animation = [pygame.image.load(img_loc+'fairy_1.png')]*20 + [pygame.image.load(img_loc+'fairy_2.png')]*20
         self.current_frame = 0
         self.visible = False
@@ -59,7 +58,7 @@ class Fairy:
     class Particle:
         def __init__(self,x,y,duration):
             self.cor = [x,y]
-            self.image = pygame.image.load('code/assets/tilesets/tiles/dust.png')
+            self.image = pygame.image.load('assets/tilesets/tiles/dust.png')
             self.image.set_colorkey((0,255,0))
             self.timer = 0
             self.destroy = False
@@ -148,7 +147,7 @@ class Player:
         self.flip = False
         self.alpha = 255
         self.white_shading = 0
-        self.fill_animation_database('code/assets/animations/player/')
+        self.fill_animation_database('assets/animations/player/')
         
         # hitboxes (x,y is offset from hurtbox), other objects
         self.hitbox = {

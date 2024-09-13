@@ -3,18 +3,20 @@ import engine as e
 from engine import *
 from objects import *
 
-#### C:\users\saadi\appdata\local\packages\pythonsoftwarefoundation.python.3.9_qbz5n2kfra8p0\localcache\local-packages\python39\Scripts\pyinstaller.exe
 #### command to use pyinstaller
+#### C:\users\saadi\appdata\local\packages\pythonsoftwarefoundation.python.3.9_qbz5n2kfra8p0\localcache\local-packages\python39\Scripts\pyinstaller.exe
+#### full copy-and-paste command
+#### C:\users\saadi\appdata\local\packages\pythonsoftwarefoundation.python.3.9_qbz5n2kfra8p0\localcache\local-packages\python39\Scripts\pyinstaller.exe --onefile main.py --noconsole --icon application-icon.ico
 
 # for debug
-MUSIC = False
+MUSIC = True
 
 def START_SCREEN():
-    pygame.mixer.music.load('code/assets/sounds/music/menu.wav')
+    pygame.mixer.music.load('assets/sounds/music/menu.wav')
     pygame.mixer.music.set_volume(e.settings['Music Volume']/10)
     if MUSIC:
         pygame.mixer.music.play(-1)
-    fancy_font = Font('code/assets/fonts/fancy.png',0)
+    fancy_font = Font('assets/fonts/fancy.png',0)
     background = SkyBackground(e.tilesets_database, CAMERA_SIZE, CHUNK_SIZE)
     transition = Transition('FADE-OUT',WHITE,255,3,CAMERA_SIZE)
     state = 'START'
@@ -24,7 +26,6 @@ def START_SCREEN():
     instr_surf.set_colorkey((0,0,0))
     alpha = 0
 
-    text_scroller = TextScroller(['Serena Caelum'], fancy_font, (255,255,255), 200, 100, 5)
 
     while True:
         e.last_time = time.time()
@@ -32,6 +33,7 @@ def START_SCREEN():
         background.update()
         camera.fill((0,0,0))
         camera.blit(background.draw(),(0,0))
+        camera.blit(e.tilesets_database['backgrounds_list']['game_logo'],(0,0))
 
         instr_surf.fill((0,0,0))
 
@@ -39,8 +41,8 @@ def START_SCREEN():
             instruction = 'Press Start'
             alpha = (255 / 2) * math.sin(time.time()*2) + (255 / 2) if state == 'START' else alpha-5
             # shadow
-            instr_surf.blit(fancy_font.draw(instruction, (60, 60, 60)), ((CAMERA_SIZE[0] / 2) - (fancy_font.get_width(instruction) / 2)+1, (CAMERA_SIZE[1] * (3/4)) - (fancy_font.height / 2)))
-            instr_surf.blit(fancy_font.draw(instruction, (60, 60, 60)), ((CAMERA_SIZE[0] / 2) - (fancy_font.get_width(instruction) / 2)+1, (CAMERA_SIZE[1] * (3/4)) - (fancy_font.height / 2)+1))
+            instr_surf.blit(fancy_font.draw(instruction, (62, 131, 209)), ((CAMERA_SIZE[0] / 2) - (fancy_font.get_width(instruction) / 2)+1, (CAMERA_SIZE[1] * (3/4)) - (fancy_font.height / 2)))
+            instr_surf.blit(fancy_font.draw(instruction, (62, 131, 209)), ((CAMERA_SIZE[0] / 2) - (fancy_font.get_width(instruction) / 2)+1, (CAMERA_SIZE[1] * (3/4)) - (fancy_font.height / 2)+1))
             # text
             instr_surf.blit(fancy_font.draw(instruction, WHITE), ((CAMERA_SIZE[0] / 2) - (fancy_font.get_width(instruction) / 2), (CAMERA_SIZE[1] * (3/4)) - (fancy_font.height / 2)))
             instr_surf.set_alpha(alpha)
@@ -52,9 +54,9 @@ def START_SCREEN():
             instruction = ['Start Game','Options','Quit Game']
             alpha = min(alpha+5, 255)
             for i in range(len(instruction)):
-                font_color = (255, 255, 255) if select == i else (60, 60, 60)
+                font_color = (255, 255, 255) if select == i else (125, 125, 125)
                 
-                shadow_color = (100, 100, 100) if select == i else (40, 40, 40)
+                shadow_color = (62, 131, 209) if select == i else (60, 60, 60)
                 y_offset = 2 * ((2/math.pi)*math.asin(math.sin(time.time()*math.pi*3))) if select == i else 0
                 
                 # shadow
@@ -65,9 +67,6 @@ def START_SCREEN():
                 instr_surf.set_alpha(alpha)
             
         camera.blit(instr_surf,(0,0))
-        
-        text_scroller.update()
-        camera.blit(text_scroller.draw(),((CAMERA_SIZE[0]/2)-(fancy_font.get_width('Serena Caelum')/2), 60))
         
         for event in pygame.event.get():
             joystick_buttonpress = -1
@@ -121,7 +120,7 @@ def START_SCREEN():
                     game_win = False
                     if select == 0:
                         game_win = GAME_INTRO()
-                        pygame.mixer.music.load('code/assets/sounds/music/menu.wav')
+                        pygame.mixer.music.load('assets/sounds/music/menu.wav')
                         pygame.mixer.music.set_volume(e.settings['Music Volume']/10)
                         if MUSIC:
                             pygame.mixer.music.play(-1)
@@ -146,8 +145,8 @@ def START_SCREEN():
 
 
 def OPTIONS_SCREEN():
-    fancy_font = Font('code/assets/fonts/fancy.png',0)
-    plain_font = Font('code/assets/fonts/plain.png')
+    fancy_font = Font('assets/fonts/fancy.png',0)
+    plain_font = Font('assets/fonts/plain.png')
     transition = Transition('FADE-OUT',BLACK,255,5,CAMERA_SIZE)
     options = ['Window Size','Window Border','Full Screen','Music Volume','Sound Volume']
     options_surf = pygame.Surface(CAMERA_SIZE)
@@ -318,18 +317,19 @@ def HOW_TO_PLAY():
 
 
 def GAME_INTRO():
-    pygame.mixer.music.load('code/assets/sounds/music/intro.wav')
+    pygame.mixer.music.load('assets/sounds/music/intro.wav')
     pygame.mixer.music.set_volume(e.settings['Music Volume']/10)
     if MUSIC:
         pygame.mixer.music.play(-1)
     scene = 0
     timer = 0
+    censor_pos = [0,CAMERA_SIZE[1]/2]
     y_offset = 0
     timer_duration = 180
     text = ['The sky is shattered','but the sun is still there','so the High Priestess must be safe.',
             'She disappeared last night and told no one.','As her guardian, it\'s my duty to protect her.','I must find her before it\'s too late!',
             'Soleanna!','Even if the sky is falling down','I will find you!']
-    fancy_font = Font('code/assets/fonts/fancy.png',0)
+    fancy_font = Font('assets/fonts/fancy.png',0)
     text_scroll = TextScroller(text, fancy_font,(255,255,255),fancy_font.get_width(text[0]),fancy_font.height,5)
     transition = Transition('FADE-IN',(255,255,255),0,3,CAMERA_SIZE)
     Run = True
@@ -359,29 +359,38 @@ def GAME_INTRO():
                     text_scroll.color = (255,255,255)
                     timer_duration = 240
                     if MUSIC:
-                        pygame.mixer.music.load('code/assets/sounds/music/level_B.wav')
+                        pygame.mixer.music.load('assets/sounds/music/level_C.wav')
                         pygame.mixer.music.play(-1)
 
         elif scene < 8:
             timer += 1
             if timer < 120:
                 camera.blit(pygame.transform.scale(e.tilesets_database['backgrounds_list']['intro_'+str(scene-5)], (240,160)),(0,0+(12*(scene-6))))
-                pygame.draw.rect(camera, (0,0,0), pygame.Rect(0,0,CAMERA_SIZE[0],24))
-                pygame.draw.rect(camera, (0,0,0), pygame.Rect(0,CAMERA_SIZE[1]-24,CAMERA_SIZE[0],24))
+                censor_pos[0] -= 4 if censor_pos[0] > 0-(CAMERA_SIZE[1]/2)+24 else 0
+                censor_pos[1] += 4 if censor_pos[1] < CAMERA_SIZE[1]-24 else 0
+                pygame.draw.rect(camera, (0,0,0), pygame.Rect(0,censor_pos[0],CAMERA_SIZE[0],CAMERA_SIZE[1]/2))
+                pygame.draw.rect(camera, (0,0,0), pygame.Rect(0,censor_pos[1],CAMERA_SIZE[0],CAMERA_SIZE[1]/2))
             elif timer < timer_duration:
                 camera.blit(fancy_font.draw(text[0],(255,255,255)),((CAMERA_SIZE[0]/2)-(fancy_font.get_width(text[0])/2), (CAMERA_SIZE[1]/2)-(fancy_font.height/2)))
             else:
                 timer = 0
+                censor_pos = [0,CAMERA_SIZE[1]/2]
                 y_offset = 288-160
                 scene += 1
                 text.pop(0)
 
                 if scene == 6:
                     timer_duration = 120
+                if scene == 8:
+                    censor_pos = [0,CAMERA_SIZE[0]/2]
         
         elif scene == 8:
             img = e.tilesets_database['backgrounds_list']['intro_'+str(scene-5)]
             camera.blit(pygame.transform.scale(img, (192,288)),(24,0-y_offset))
+            censor_pos[0] -= 4 if censor_pos[0] > 0-(CAMERA_SIZE[0]/2) else 0
+            censor_pos[1] += 4 if censor_pos[1] < CAMERA_SIZE[0] else 0
+            pygame.draw.rect(camera, (0,0,0), pygame.Rect(censor_pos[0],0,CAMERA_SIZE[0]/2,CAMERA_SIZE[1]))
+            pygame.draw.rect(camera, (0,0,0), pygame.Rect(censor_pos[1],0,CAMERA_SIZE[0]/2,CAMERA_SIZE[1]))
             if timer < 60:
                 timer += 1
             elif timer > 120:
@@ -415,7 +424,7 @@ def GAME_INTRO():
             if (event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN) or (event.type == pygame.JOYBUTTONDOWN and event.button == 7):
                 Run = False
                 if scene < 6 and MUSIC:
-                    pygame.mixer.music.load('code/assets/sounds/music/level_B.wav')
+                    pygame.mixer.music.load('assets/sounds/music/level_C.wav')
                     pygame.mixer.music.set_volume(e.settings['Music Volume']/10)
                     pygame.mixer.music.play(-1)
 
@@ -432,7 +441,7 @@ def GAME_INTRO():
 
 def REUNION_CUTSCENE():
     pygame.mixer.music.fadeout(1000)
-    pygame.mixer.music.load('code/assets/sounds/music/reunion_A.wav')
+    pygame.mixer.music.load('assets/sounds/music/reunion_A.wav')
     priestess_anim = []
     priestess_frame = 0
     player_frame = 0
@@ -441,10 +450,10 @@ def REUNION_CUTSCENE():
     text_p1 = ['C:Soleanna!','S:...Caelum?']
     text_p2 = ['C:I\'ve been worried about you all|this time. You really scared me.', 'S:I\'m so sorry Caelum, but it was|important for us to be alone.',
                 'S:So I chose to hide myself in the|one place only you and I know.','C:The sky is shattered. The animals|have gone mad.','C:What is going on?',
-                'S:A calamity has broken the sky|barrier, which protects our world.','S:It wants to steal the light of the|sun.','C:Is it looking for you, the source|of that light?',
-                'S:Yes, and it needs to be stopped.','S:If I intensify the sun\'s shine, the|invader will be clearly visible.','S:Caelum, my guardian... will you|fight for me?',
-                'C:Do you have to ask? I\'ll fight the|world itself to keep you safe.','S:Once I begin it will come to us.|Caelum... we will win.']
-    fancy_font = Font('code/assets/fonts/fancy.png',0)
+                'S:A dark entity has broken the sky|barrier that protects our world.','S:It wants to steal the light of the|sun.','C:Is it looking for you, the source|of that light?',
+                'S:Yes, and it needs to be stopped.','S:If I increase the sun\'s shine, the|invader will be clearly visible.','S:Caelum, my guardian... will you|fight for me?',
+                'C:Do you have to ask? I\'ll fight the|world itself to keep you safe.','S:Once I begin it will come to us.|Caelum... thank you.']
+    fancy_font = Font('assets/fonts/fancy.png',0)
     dialog_box = DialogBox(text_p1,fancy_font,3)
     transition = Transition('FADE-IN',(255,255,255),0,3,CAMERA_SIZE)
     Run = True
@@ -506,7 +515,7 @@ def REUNION_CUTSCENE():
             camera.blit(transition.draw(), (0,0))
             
             if transition.end:
-                pygame.mixer.music.load('code/assets/sounds/music/boss.wav')
+                pygame.mixer.music.load('assets/sounds/music/boss_B.wav')
                 pygame.mixer.music.set_volume(e.settings['Music Volume']/10)
                 if MUSIC:
                         pygame.mixer.music.play(-1)
@@ -630,7 +639,7 @@ def GAME_OVER(player, camera_pos, score):
 
 
 def RESULTS_SCREEN(back_color, font_color, shadow_color, header, score):
-    plain_font = Font('code/assets/fonts/plain.png')
+    plain_font = Font('assets/fonts/plain.png')
     transition = Transition('FADE-IN',back_color,0,4,CAMERA_SIZE)
     results_surf = pygame.Surface(CAMERA_SIZE)
     results_surf.set_colorkey((0,0,0))
@@ -664,14 +673,14 @@ def RESULTS_SCREEN(back_color, font_color, shadow_color, header, score):
 
             if score_stack[category] < score[category]:
                 score_stack[category] += 0.47 if category == 'Total Time' else 1
-                e.play_sound('score')
+                e.play_sound('text')
                 break
             elif score_stack[category] > score[category]:
                 score_stack[category] = score[category]
 
             y_offset += plain_font.height + 12
 
-        if len(score_stack) == len(score) and score_stack['No. of Specials Used'] >= score['No. of Specials Used']:
+        if len(score_stack) == len(score) and score_stack['Specials Used'] >= score['Specials Used']:
             results_surf.blit(plain_font.draw(header,font_color), ((CAMERA_SIZE[0] / 2)-(plain_font.get_width(header)/2), 25))
             y_offset += plain_font.height
             pointer_img = pygame.mask.from_surface(e.tilesets_database['tiles_list']['pointer'])
@@ -712,7 +721,7 @@ def RESULTS_SCREEN(back_color, font_color, shadow_color, header, score):
 def GAME_LOOP():
     full_transition = Transition('FADE-OUT',(255,255,255),255,3,CAMERA_SIZE)
     level_transition = None
-    plain_font = Font('code/assets/fonts/plain.png')
+    plain_font = Font('assets/fonts/plain.png')
     back_layer0 = TrippyBackground(e.tilesets_database, CAMERA_SIZE, CHUNK_SIZE, COLORSET, GREYSCALE)
     HUD = Hud()
     title_card = TitleCard("Find the High Priestess!")
@@ -726,7 +735,7 @@ def GAME_LOOP():
 
     clear_rect_list(obj_list)    
     e.level_config = load_level_config('1-1')
-    score = {'Total Time':time.time(),'Damage Taken':0,'Enemies Defeated':0,'No. of Items Used':0,'No. of Specials Used':0}
+    score = {'Total Time':time.time(),'Hits Taken':0,'Enemies Defeated':0,'Items Used':0,'Specials Used':0}
     player.restart()
     Run = True
 
@@ -762,7 +771,7 @@ def GAME_LOOP():
             prev_health = player.health
             player.sound_volume = e.settings['Sound Volume']/10
             player.update(floor_collisions, object_collisions)
-            score['Damage Taken'] += prev_health - player.health
+            score['Hits Taken'] += prev_health - player.health
             
             if player.health <= 0:
                 pygame.mixer.music.stop()
@@ -772,7 +781,7 @@ def GAME_LOOP():
             
             if player.x_state == 'SPECIAL' and special_transition is None:
                 special_transition = SpecialTransition(player.rect.x+(player.rect.width / 2)-camera_pos[0], CAMERA_SIZE)
-                score['No. of Specials Used'] += 1
+                score['Specials Used'] += 1
 
             enemy_obj_list = {'player':[player]}
             enemy_obj_list['hitboxes'] = player.active_hitbox
@@ -921,7 +930,7 @@ def GAME_LOOP():
                             e.play_sound('select')
                         player.use_item(player.inventory[item_select].id)
                         player.inventory.pop(item_select)
-                        score['No. of Items Used'] += 1
+                        score['Items Used'] += 1
                         item_select = -1
                     if (joystick_buttonpress == 1 or (event.type == pygame.KEYDOWN and event.key == pygame.K_x)):
                         item_select = -1

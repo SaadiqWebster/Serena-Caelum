@@ -4,9 +4,9 @@ import objects as o
 
 pygame.mixer.pre_init(44100, -16, 2, 512)
 pygame.init()
-pygame.mixer.set_num_channels(50)
+pygame.mixer.set_num_channels(300)
 pygame.display.set_caption('Serena Caelum')
-pygame.display.set_icon(pygame.image.load('code/assets/tilesets/tiles/icon.png'))
+pygame.display.set_icon(pygame.image.load('assets/tilesets/tiles/icon.png'))
 pygame.joystick.init()
 WINDOW_SIZE = (720,480)
 CAMERA_SIZE = (240,160)
@@ -27,7 +27,7 @@ true_camera_pos = [0,0]
 clock = pygame.time.Clock()
 last_time = time.time()
 joysticks = [pygame.joystick.Joystick(i) for i in range(pygame.joystick.get_count())]
-joystick_buttonstate = [False]*14
+joystick_buttonstate = [False]*16
 settings = {'Window Size':3,'Window Border':1,'Full Screen':0,'Music Volume':5,'Sound Volume':5}
 tilesets_database = {}
 sounds_database = {}
@@ -100,7 +100,7 @@ def fill_tilesets_database(path):
             tilesets_database[directory+'_list'][f[:-4]] = tile
             if directory == 'tiles':
                 tile_rect_list[f[:-4]] = []
-fill_tilesets_database('code/assets/tilesets')
+fill_tilesets_database('assets/tilesets')
 
 
 def fill_sounds_database(path):
@@ -109,9 +109,9 @@ def fill_sounds_database(path):
     for f in files:
         database[f[:-4]] = pygame.mixer.Sound(path+'/'+f)
     return database
-sounds_database = fill_sounds_database('code/assets/sounds/sfx/menu')
-player.sounds_database = fill_sounds_database('code/assets/sounds/sfx/player')
-o.enemy_sounds_database = fill_sounds_database('code/assets/sounds/sfx/objects')
+sounds_database = fill_sounds_database('assets/sounds/sfx/menu')
+player.sounds_database = fill_sounds_database('assets/sounds/sfx/player')
+o.enemy_sounds_database = fill_sounds_database('assets/sounds/sfx/objects')
 
 
 def play_sound(sound):
@@ -156,7 +156,7 @@ def read_input_joystick(event):
 
 
 def load_level_config(level):
-    f=open('code/config/level_'+level+'.json')
+    f=open('config/level_'+level+'.json')
     return json.load(f)
 
 
@@ -229,8 +229,8 @@ def spawn_objects(chunk):
                     elif object[2:] == 'Bat':
                         obj = o.Bat(x*TILE_SIZE[0] + chunk[0]*CHUNK_SIZE[0] +2, y*TILE_SIZE[1] + chunk[1]*CHUNK_SIZE[1])
                         obj_list['enemies'].append(obj)
-                    elif object[2:] == 'Lion':
-                        obj = o.Lion(x*TILE_SIZE[0] + chunk[0]*CHUNK_SIZE[0], y*TILE_SIZE[1] + chunk[1]*CHUNK_SIZE[1])
+                    elif object[2:] == 'Wolf':
+                        obj = o.Wolf(x*TILE_SIZE[0] + chunk[0]*CHUNK_SIZE[0], y*TILE_SIZE[1] + chunk[1]*CHUNK_SIZE[1])
                         obj_list['enemies'].append(obj)
                     elif object[2:] == 'Bird':
                         obj = o.Bird(x*TILE_SIZE[0] + chunk[0]*CHUNK_SIZE[0], y*TILE_SIZE[1] + chunk[1]*CHUNK_SIZE[1])
@@ -477,7 +477,7 @@ def draw_foreground_parallax(camera_pos):
 
 class Hud:
     def __init__(self):
-        self.text = Font('code/assets/fonts/plain.png')
+        self.text = Font('assets/fonts/plain.png')
         self.target = None
         self.timer = 0
 
@@ -733,7 +733,7 @@ class Transition:
 
 class TitleCard:
         def __init__(self, text):
-            self.fancy_font = Font('code/assets/fonts/fancy.png',0)
+            self.fancy_font = Font('assets/fonts/fancy.png',0)
             self.alpha = 0
             self.text = text
             self.text_width = self.fancy_font.get_width(self.text)
