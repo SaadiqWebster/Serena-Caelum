@@ -28,7 +28,7 @@ clock = pygame.time.Clock()
 last_time = time.time()
 joysticks = [pygame.joystick.Joystick(i) for i in range(pygame.joystick.get_count())]
 joystick_buttonstate = [False]*16
-settings = {'Window Size':3,'Window Border':1,'Full Screen':0,'Music Volume':5,'Sound Volume':5}
+settings = {'Window Size':3,'Window Border':1,'Full Screen':0,'Music Volume':3,'Sound Volume':3}
 tilesets_database = {}
 sounds_database = {}
 
@@ -63,11 +63,20 @@ def fill_colorset():
         color[2] -= incr
         COLORSET.append((color[0],color[1],color[2]))
 
-    color = 0
-    for i in range(254):
+    min_grey_brightness = 50
+    max_grey_brightness = 150
+    color = min_grey_brightness
+
+    for i in range(510):
+        GREYSCALE.append((color,color,color))
+
+    for i in range(min_grey_brightness, max_grey_brightness):
         color += 1
         GREYSCALE.append((color,color,color))
-    for i in range(254):
+        GREYSCALE.append((color,color,color))
+
+    for i in range(min_grey_brightness, max_grey_brightness):
+        GREYSCALE.append((color,color,color))
         GREYSCALE.append((color,color,color))
         color -= 1
 fill_colorset()
@@ -361,7 +370,7 @@ def move_and_test(rect, velocity, floor_tiles, obj_list, ignore_wall=False):
     collision_direction = {'top': False, 'bottom': False, 'right': False, 'left': False}
     collision_objects = {}
 
-    rect.x += velocity[0]
+    rect.x += float(velocity[0])
     collision_list = collision_floor_test(rect, floor_tiles)
     if not ignore_wall:
         for tile in collision_list['tile']:
@@ -385,7 +394,7 @@ def move_and_test(rect, velocity, floor_tiles, obj_list, ignore_wall=False):
                     collision_direction['bottom'] = True
     collision_objects = collision_obj_test(rect, obj_list)
 
-    rect.y += velocity[1]
+    rect.y += float(velocity[1])
     collision_list = collision_floor_test(rect, floor_tiles)
     if not ignore_wall:
         for tile in collision_list['tile']:

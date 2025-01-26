@@ -1,4 +1,5 @@
 import pygame, os, time, math, random
+import player as _p
 
 class SpecialTransition:
     def __init__(self, x_cor, CAMERA_SIZE):
@@ -149,8 +150,9 @@ class BossBackground:
         crack_layer = self.palette_swap(self.tilesets_database['backgrounds_list']['cracked_sky'], (255,255,255), self.COLORSET[self.skybox_index])
         crack_layer.set_colorkey((0,0,0))
 
-        self.background.fill(self.COLORSET[self.skybox_index])
-        self.background.fill(self.GREYSCALE[self.greyscale_index[0]])
+        self.background.fill((1,0,0))
+        #self.background.fill(self.COLORSET[self.skybox_index])
+        #self.background.fill(self.GREYSCALE[self.greyscale_index[0]])
         self.background.blit(crack_layer, (0,0))
 
         self.background.blit(self.tilesets_database['backgrounds_list']['boss_layer1'], (0,0))
@@ -262,7 +264,12 @@ def fill_enemy_animation_database(path):
             for i in range(len(animation)):
                 frame = pygame.image.load(path+'/'+directory+'/'+_dir+'/'+_dir+'_'+str(i+1)+'.png')
                 frame.set_colorkey((0,255,0))
-                enemy_animation_database[directory][_dir] += [frame]*6
+                repeat_frame = 6 
+                if _dir == 'beam':
+                    repeat_frame = 3
+                elif _dir == 'explosion':
+                    repeat_frame = 5
+                enemy_animation_database[directory][_dir] += [frame] * repeat_frame
 fill_enemy_animation_database("assets/animations/enemies")
 
 
@@ -294,7 +301,7 @@ class Enemy:
         self.iframes_timer = 0
 
     def set_animation(self, animation, frame, play_type):
-        self.current_frame = frame - 1
+        self.current_frame = frame
         self.animation_play = play_type
         self.current_animation = animation
 
@@ -305,8 +312,7 @@ class Enemy:
     def draw(self):
         frame = pygame.transform.flip(self.animation_database[self.current_animation][self.current_frame], self.flip, False)
         mask = pygame.mask.from_surface(frame)
-        mask_surf = pygame.Surface((frame.get_width(), frame.get_height()))
-        mask_surf.blit(mask.to_surface(),(0,0))
+        mask_surf = mask.to_surface()
         mask_surf.set_colorkey((0,0,0))
         mask_surf.set_alpha(self.white_shading)
         frame.blit(mask_surf,(0,0))
@@ -378,7 +384,7 @@ class Enemy:
         if self.alpha < 0:
             self.DESTROY = True
             # 20% chance an item drop
-            if random.randint(0,4) == 0:
+            if random.random() < 0.25:
                 x = self.rect.x + (self.rect.width / 2) - 8
                 y = self.rect.y - 8 #+ (self.rect.height / 2) - 8
                 n = random.randint(0,4)
@@ -403,7 +409,7 @@ class Frog(Enemy):
             if floor_collisions['bottom']:
                 if self.state == 'JUMP':
                     self.state = 'IDLE'
-                    self.set_animation('idle',0, 'LOOP')
+                    self.set_animation('idle',0,'LOOP')
                     self.hop_timer = 60
                     self.hop_forward = not self.hop_forward
 
@@ -477,7 +483,7 @@ class Bat(Enemy):
                     self.velocity = [0,0]
 
                 self.timer += 1
-                if self.timer > 45:
+                if (self.state == 'WAKE UP' and self.timer > 45) or (self.state == 'STUN' and self.timer > 60):
                     self.state = 'FOLLOW'
 
             if self.state == 'FOLLOW':
@@ -609,8 +615,8 @@ class Ghost(Enemy):
                 self.timer += 1
                 if self.timer > 45:
                     self.state = 'FOLLOW'
-                
-            if object_collisions['player'] and not player.iframes and self.state != 'LAUGH':
+
+            if object_collisions['player'] and not player.iframes and player.x_state != 'TRANSITION_IN' and player.x_state != 'TRANSITION_OUT' and self.state != 'LAUGH':
                 self.timer = 0
                 self.set_animation('idle',0,'LOOP')
                 self.play_sound('laugh')
@@ -693,7 +699,7 @@ class Bird(Enemy):
 class Wolf(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.id = 'Weulf'
+        self.id = 'Roa'
         self.max_health = 3
         self.damage = 2
         self.rect = pygame.Rect(x, y, 32, 16)
@@ -703,6 +709,9 @@ class Wolf(Enemy):
         self.animation_database = enemy_animation_database[self.id]
         self.timer = 0
         self.timer_cap = 30
+        self.wait_duration = 55
+        self.idle_duration = 60
+        self.cooldown_duration = 90
         self.leftbound = 0
         self.rightbound = 4
         self.distance = 0
@@ -713,27 +722,34 @@ class Wolf(Enemy):
             if floor_collisions['bottom']:
                     if self.state == 'JUMP' and self.timer > self.timer_cap:
                         self.state = 'WAIT'
+                        self.set_animation('idle',42,'LOOP')
                         self.timer = 0
-                        self.timer_cap = 90
+                        self.timer_cap = self.cooldown_duration
 
             if self.state == 'WAIT':
                 self.velocity[0] = 0
                 self.timer += 1
                 if self.timer >= self.timer_cap:
                     self.timer = 0
-                    self.timer_cap = 30
+                    self.timer_cap = self.wait_duration
                     self.flip = False if player.rect.x > self.rect.x else True
                     if player.rect.x > self.rect.x-32 and player.rect.x < self.rect.x+48:
                         self.state = 'JUMP'
-                        self.play_sound('roar')
+                        self.play_sound('growl')
+                        self.set_animation('ready',0,'LOOP')
                     elif player.rect.x > self.rect.x-64 and player.rect.x < self.rect.x+80:
                         self.state = 'CHASE'
+                        self.set_animation('run',0,'LOOP')
                     else:
                         self.state = 'IDLE'
+                        self.timer = 0
+                        self.timer_cap = self.idle_duration
+                        self.set_animation('idle',0,'LOOP')
 
             if self.state == 'IDLE':
                 if player.rect.x > self.rect.x-64 and player.rect.x < self.rect.x+80:
                     self.state = 'CHASE'
+                    self.set_animation('run',0,'LOOP')
                 else:
                     self.timer += 1  
                     if self.timer >= self.timer_cap:
@@ -744,14 +760,21 @@ class Wolf(Enemy):
                         elif random.randint(0,1) == 0:
                             self.flip = not self.flip
                         self.distance = random.randint(0,4)
-                        self.state = 'WALK'
-                        self.timer = 0
+                        if self.distance > 0:
+                            self.state = 'WALK'
+                            self.timer = 0
+                            self.set_animation('walk',0,'LOOP')
+                        else:
+                            self.timer = 0
+                            self.timer_cap = self.idle_duration
 
             if self.state == 'CHASE':
                 if player.rect.x > self.rect.x-32 and player.rect.x < self.rect.x+48:
                     self.timer = 0
+                    self.timer_cap = self.wait_duration
                     self.state = 'JUMP'
-                    self.play_sound('roar')
+                    self.play_sound('growl')
+                    self.set_animation('ready',0,'LOOP')
                 self.velocity[0] = 2 if player.rect.x > self.rect.x else -2
                 self.flip = False if player.rect.x > self.rect.x else True
             
@@ -760,6 +783,8 @@ class Wolf(Enemy):
                 self.velocity[0] = 0
                 if self.timer == self.timer_cap:
                     self.gravity = -3
+                    self.play_sound('roar')
+                    self.set_animation('jump',0,'ONCE')
                 if self.timer >= self.timer_cap:
                     self.velocity[0] = 3 if not self.flip else -3
 
@@ -767,6 +792,7 @@ class Wolf(Enemy):
                 if player.rect.x > self.rect.x-64 and player.rect.x < self.rect.x+80:
                     self.distance = 0
                     self.state = 'CHASE'
+                    self.set_animation('run',0,'LOOP')
                 elif self.distance > 0:
                     self.velocity[0] = 1 if not self.flip else -1
                     self.timer += 1
@@ -779,21 +805,35 @@ class Wolf(Enemy):
                             self.flip = not self.flip
                 else:
                     self.state = 'IDLE'
+                    self.set_animation('idle',0,'LOOP')
+                    self.timer = 0
+                    self.timer_cap = self.idle_duration
 
 
 # -- PROJECTILES ---
 class Projectile:
-    def __init__(self, x, y, width, height, damage, duration, anim):
+    def __init__(self, x, y, width, height, damage, duration, anim = None):
         self.rect = pygame.Rect(x,y,width,height)
         self.duration = duration
         self.timer = 0
         self.velocity = [0,0]
         self.damage = damage
+        self.particle_q = []
+        self.particle_timer = 0
         self.DESTROY = False
 
         global enemy_animation_database
-        self.animation = enemy_animation_database['projectiles'][anim]
+        if anim is not None and anim != '':
+            self.animation = enemy_animation_database['projectiles'][anim]
+        else:
+            frame = pygame.Surface((width, height))
+            frame.fill((0,255,0))
+            frame.set_colorkey((0,255,0))
+            self.animation = [frame]
         self.current_frame = 0
+
+    def spawn_particle(self,duration=24):
+        self.particle_q.append(_p.Particle(self.rect.x+random.randrange(0,12),self.rect.y+random.randrange(0,12),duration))
 
     def draw(self):
         return self.animation[self.current_frame]
@@ -807,30 +847,48 @@ class Projectile:
         if self.timer >= self.duration:
             self.DESTROY = True
 
+        for particle in self.particle_q:
+            particle.update()
+            if particle.destroy:
+                self.particle_q.remove(particle)
+
 class ShootProjectile(Projectile):
     def __init__(self, x, y, width, height, damage, duration, velocity):
         super().__init__(x, y, width, height, damage, duration, 'moon')
         self.velocity = velocity
 
+    def update(self):
+        self.particle_timer += 1
+        if self.particle_timer > 6:
+            self.particle_timer = 0
+            self.spawn_particle()
+
+        super().update()
+
 class JumpProjectile(Projectile):
-    def __init__(self, x, y, width, height, damage, duration):
+    def __init__(self, x, y, width, height, damage, duration, hor_velocity):
         super().__init__(x, y, width, height, damage, duration, 'moon')
+        self.velocity[0] = hor_velocity
         self.velocity[1] = -5
 
     def update(self):
-        super().update()
-        self.velocity[1] = min(10, self.velocity[1] + 0.2)
+        self.particle_timer += 1
+        if self.particle_timer > 6:
+            self.particle_timer = 0
+            self.spawn_particle()
 
+        super().update()
+
+        self.velocity[1] = min(10, self.velocity[1] + 0.2)
 
 # -- BOSS ---
 class Boss(Enemy):
     def __init__(self):
-        x = 120-(48/2)
-        y = 87-(48/2)-16
+        x, y = 96, 47
 
         super().__init__(x, y)
-        self.id = 'Boss'
-        self.max_health = 20
+        self.id = 'Lux Furem'
+        self.max_health = 30
         self.rect = pygame.Rect(x, y, 48, 48)
         self.health = self.max_health
         global enemy_animation_database
@@ -839,38 +897,80 @@ class Boss(Enemy):
         self.cor = [x,y]
         self.phase = -1
         self.prev_phase = -1
-        self.phase_time = 330
+        self.phase_duration = 330
+        self.phase_time = self.phase_duration
+        self.shoot_speed = 3.5
+        self.spit_amount = 1
+        self.spit_movement_speed = 0.015
+        self.idle_movement_speed = 0.015
+        self.movement_timer = 0
     
     def change_phase(self):
         if self.phase != 0: # WAIT PERIOD
+            self.set_animation('idle',0,'LOOP')
             self.rect.x = 300
             self.rect.y = 80
             self.prev_phase = self.phase
             self.phase = 0
-            self.phase_time = 180 if self.health > self.max_health/2 else random.randint(60,180)
+            if self.prev_phase == 2 or self.prev_phase == 4:
+                self.phase_duration = 30
+            elif self.health > self.max_health / 2:
+                self.phase_duration = 180
+            else: 
+                self.phase_duration = random.randint(30,120)
+
+            self.phase_time = self.phase_duration
+
         else:
-            r = random.randint(1,5)
+            #self.prev_phase = -1 # this line is needed when testing individual phases
+            r = 0
+            if self.prev_phase == 4:
+                r = 5 
+            elif self.prev_phase == 5:
+                r = random.randint(1,3)
+            else:
+                r = random.randint(1,5)
             if r != self.prev_phase or r == 2:
                 self.phase = r
+                self.movement_timer = 0
+
                 if r == 1: # RAIN
                     self.cor = [120-(self.rect.width/2),32]
-                    self.phase_time = random.randint(300,600)
+                    self.phase_duration = random.randint(300,600) + 96
+                    self.set_animation('eyetomouth',0,'ONCE')
+                    self.spit_amount = 1 if self.health > self.max_health / 2 else 2
+
                 elif r == 2: # SHOOT 
                     self.cor[0] = 8 if random.randint(0,1) == 0 else 184
                     self.cor[1] = random.randint(28,88)
-                    self.phase_time = 120
+                    animation = 'pointright' if self.cor[0] < 120 else 'pointleft'
+                    self.set_animation(animation,0,'ONCE')
+                    self.phase_duration = 132
+
                 elif r == 3: # LIGHTNING
-                    self.cor = [120-(self.rect.width/2),28]
-                    self.phase_time = 243
+                    self.cor = [120-(self.rect.width/2), 26]
+                    self.phase_duration = 243
+                    self.set_animation('lightning',0,'ONCE')
+
                 elif r == 4: # BEAM
                     self.cor = [300,80]
-                    self.phase_time = 600
+                    self.phase_duration = 465
+
                 else: # FREE HIT
                     self.cor = [120-(self.rect.width/2),70-(self.rect.height/2)]
-                    self.phase_time = 300 if self.health > self.max_health/2 else random.randint(180,300)
+                    if random.random() < 0.15:
+                        self.phase_duration = 138 
+                    elif self.health > self.max_health / 2:
+                        self.phase_duration = 218
+                    else:
+                        self.phase_duration = random.randint(138, 218)
+                    self.set_animation('warp_in',0,'ONCE')
                 
+                self.phase_time = self.phase_duration
                 self.rect.x = self.cor[0]
                 self.rect.y = self.cor[1]
+                if self.phase != 4:
+                    self.play_sound('warp')
 
     def update(self, floor_collisions, object_collisions, player):
         super().update(floor_collisions, object_collisions, player)
@@ -884,41 +984,111 @@ class Boss(Enemy):
 
             # RAIN
             if self.phase == 1:
-                self.rect.x = self.cor[0] - math.sin(time.time()*1) * 88
-                self.rect.y = self.cor[1] + (2/math.pi)*math.asin(math.sin(time.time()*math.pi*2)) * 2
-                if self.phase_time % 45 == 0:
-                    self.projectile_q.append(JumpProjectile(self.rect.x+16, self.rect.y+16, 16, 16, 1, 300))
+                if self.current_animation == 'eyetomouth' and self.animation_play == 'STOP':
+                    self.set_animation('spit',0,'LOOP')
+                
+                if self.current_animation == 'spit':
+                    self.movement_timer += self.spit_movement_speed
+                    self.rect.x = self.cor[0] - math.sin(self.movement_timer) * 88
+                    self.rect.y = self.cor[1] + (2/math.pi)*math.asin(math.sin(self.movement_timer * math.pi*2)) * 4
+                    if self.current_frame == 18 and self.spit_amount == 1:
+                        self.projectile_q.append(JumpProjectile(self.rect.x+16, self.rect.y+16, 16, 16, 1, 300, 0))
+                        self.play_sound('spit')
+                    
+                    if self.current_frame == 18 and self.spit_amount == 2:
+                        self.projectile_q.append(JumpProjectile(self.rect.x+16, self.rect.y+16, 16, 16, 1, 300, -1))
+                        self.play_sound('spit')
+                    
+                    if self.current_frame == 30 and self.spit_amount == 2:
+                        self.projectile_q.append(JumpProjectile(self.rect.x+16, self.rect.y+16, 16, 16, 1, 300, 1))
+                        self.play_sound('spit')
+
+                if self.phase_time == self.phase_duration - 18:
+                    self.play_sound('eyetomouth')
+
+                if self.phase_time == 48:
+                    self.set_animation('mouthtoeye',0,'ONCE')
+                    self.play_sound('mouthtoeye')
+
+                if self.phase_time == 24:
+                    self.play_sound('warp')
             
             # SHOOT
             elif self.phase == 2:
-                if self.phase_time == 60 or self.phase_time == 1:  
-                    angle = math.atan2(player.rect.y-self.rect.y+16+8, player.rect.x-self.rect.x+16+8)
-                    x_vel = int(math.cos(angle)*4)
-                    y_vel = int(math.sin(angle)*4)
-                    self.projectile_q.append(ShootProjectile(self.rect.x+16, self.rect.y+16, 16, 16, 1, 300, [x_vel,y_vel]))
-                
-                if self.phase_time == 60:
+                if self.phase_time == 102 or self.phase_time == 36:
+                    x_vel = player.rect.x+8 - self.rect.x+24
+                    y_vel = player.rect.y+16 - self.rect.y+24
+                    magnitude = float(math.sqrt(x_vel**2 + y_vel**2))
+                    x_vel = float((x_vel / magnitude) * self.shoot_speed)
+                    y_vel = float((y_vel / magnitude) * self.shoot_speed)
+                    self.projectile_q.append(ShootProjectile(self.rect.x+16, self.rect.y+16, 16, 16, 1, 300, [x_vel, y_vel]))
+                    self.play_sound('shoot')
+
+                if self.phase_time == 66:
                     self.rect.x += 176 if self.cor[0] < 120 else -176
                     self.rect.y = random.randint(28,88)
+                    animation = 'pointright' if self.rect.x < 120 else 'pointleft'
+                    self.set_animation(animation,0,'ONCE')
+                    self.play_sound('warp')
+
+                if self.phase_time == 84 or self.phase_time == 18:
+                    self.play_sound('warp')
+                    
 
             # LIGHTNING
             elif self.phase == 3:
+                self.movement_timer += self.idle_movement_speed
+                self.rect.y = self.cor[1] + (2/math.pi)*math.asin(math.sin(self.movement_timer*math.pi*1)) * 2
+                
+                if self.phase_time == 171:
+                    self.play_sound('spark')
+
                 if self.phase_time == 122:
-                    self.projectile_q.append(Projectile(8, 0, 48, 160, 1, 6, 'lightning'))
-                    self.projectile_q.append(Projectile(184, 0, 48, 160, 1, 6, 'lightning'))
-                if self.phase_time == 101:
-                    self.projectile_q.append(Projectile(self.rect.x-64, 0, 48, 160, 1, 6, 'lightning'))
-                    self.projectile_q.append(Projectile(self.rect.x+64, 0, 48, 160, 1, 6, 'lightning'))
-                if self.phase_time == 65:
-                    self.projectile_q.append(Projectile(self.rect.x,0, 48, 160, 1, 6, 'lightning'))
+                    self.projectile_q.append(Projectile(8, 0, 48, 144, 1, 18, 'lightning'))
+                    self.projectile_q.append(Projectile(184, 0, 48, 144, 1, 18, 'lightning'))
+                    self.play_sound('lightning')
+
+                if self.phase_time == 100:
+                    self.projectile_q.append(Projectile(self.rect.x-64, 0, 48, 144, 1, 18, 'lightning'))
+                    self.projectile_q.append(Projectile(self.rect.x+64, 0, 48, 144, 1, 18, 'lightning'))
+                    self.play_sound('lightning')
+
+                if self.phase_time == 60:
+                    self.projectile_q.append(Projectile(self.rect.x,0, 48, 144, 1, 18, 'lightning'))
+                    self.play_sound('lightning')
 
             # BEAM
             elif self.phase == 4:
-                if self.phase_time == 479:
-                    self.projectile_q.append(Projectile(0, 32, 240, 32, 1, 240, 'beam'))
-                if self.phase_time == 359:
-                    self.projectile_q.append(Projectile(0, 92, 240, 32, 1, 240, 'beam'))
+                if self.phase_time == 450:
+                    self.projectile_q.append(Projectile(0, 32, 0, 0, 0, 363, 'beam'))
+                    self.play_sound('small_lazer')
+                if self.phase_time == 363:
+                    self.projectile_q.append(Projectile(0, 92, 0, 0, 0, 363, 'beam'))
+                    self.play_sound('small_lazer')
+                if self.phase_time == 291:
+                    self.projectile_q.append(Projectile(0, 32, 240, 32, 2, 156, None))
+                    self.play_sound('big_lazer')
+                if self.phase_time == 204:
+                    self.projectile_q.append(Projectile(0, 92, 240, 32, 2, 156, None))
+                    self.play_sound('big_lazer')
             
             # OTHER / FREE HIT
             else:
-                self.rect.y = self.cor[1] + (2/math.pi)*math.asin(math.sin(time.time()*math.pi*1)) * 2
+                if self.current_animation != 'warp_in':
+                    self.movement_timer += self.idle_movement_speed
+                    self.rect.y = self.cor[1] + (2/math.pi)*math.asin(math.sin(self.movement_timer*math.pi*1)) * 2
+                
+                elif self.animation_play == 'STOP':
+                    if self.phase_duration == 138:
+                        self.set_animation('thefinger',0,'ONCE')
+                    elif self.health <= self.max_health * 0.2:
+                        self.set_animation('dizzy',0,'LOOP')
+                    else:
+                        self.set_animation('tease',0,'ONCE')
+
+                if self.phase_time == 18 and self.phase != 0 and self.current_animation != 'thefinger':
+                    self.set_animation('warp_out',0,'ONCE')
+                
+                if  self.phase != 0 and ((self.current_animation == 'thefinger' and self.phase_time == 36) or (self.current_animation != 'thefinger' and self.phase_time == 18)):
+                    self.play_sound('warp')
+

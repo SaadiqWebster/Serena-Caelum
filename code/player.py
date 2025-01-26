@@ -53,27 +53,26 @@ class Fairy:
         return frame
     
     def spawn_particle(self,duration=24):
-        self.particle_q.append(self.Particle(self.cor[0]+random.randrange(0,12),self.cor[1]+random.randrange(0,12),duration))
+        self.particle_q.append(Particle(self.cor[0]+random.randrange(0,12),self.cor[1]+random.randrange(0,12),duration))
 
-    class Particle:
-        def __init__(self,x,y,duration):
-            self.cor = [x,y]
-            self.image = pygame.image.load('assets/tilesets/tiles/dust.png')
-            self.image.set_colorkey((0,255,0))
-            self.timer = 0
-            self.destroy = False
-            self.duration = duration
-        
-        def update(self):
-            self.timer += 1
-            if self.timer % 6 == 0:
-                self.cor[1] += 1
-            if self.timer > self.duration:
-                self.destroy = True
-        
-        def draw(self):
-            return self.image
-
+class Particle:
+    def __init__(self,x,y,duration):
+        self.cor = [x,y]
+        self.image = pygame.image.load('assets/tilesets/tiles/dust.png')
+        self.image.set_colorkey((0,255,0))
+        self.timer = 0
+        self.destroy = False
+        self.duration = duration
+    
+    def update(self):
+        self.timer += 1
+        if self.timer % 6 == 0:
+            self.cor[1] += 1
+        if self.timer > self.duration:
+            self.destroy = True
+    
+    def draw(self):
+        return self.image
 
 class AfterImage_Q:
     def __init__(self):
@@ -149,16 +148,18 @@ class Player:
         self.white_shading = 0
         self.fill_animation_database('assets/animations/player/')
         
-        # hitboxes (x,y is offset from hurtbox), other objects
+        # hitboxes (x,y is offset from hurtbox)
         self.hitbox = {
-            'idle-attack': Hitbox('idle-attack',1,0,3*6,pygame.Rect(self.rect.width-8,10,24,13)),
-            'dash-attack': Hitbox('dash-attack',1.5,3*6,8*6,pygame.Rect(self.rect.width-8,14,24,12)),
-            'jump-attack': Hitbox('jump-attack',1,1,3*6,pygame.Rect(self.rect.width-8,8,23,11)),
-            'down-attack': Hitbox('down-attack',1,1,2*6,pygame.Rect(self.rect.width-8,10,20,6)),
-               'guardbox': Hitbox('guardbox',0,3,20,pygame.Rect(self.rect.width-8,-5,11,self.rect.height+3))
+            'idle-attack': Hitbox('idle-attack',1,0,3*6,pygame.Rect(self.rect.width-8, 10, 28, 13)),
+            'dash-attack': Hitbox('dash-attack',1.5,3*6,8*6,pygame.Rect(self.rect.width-8, 14, 24, 12)),
+            'jump-attack': Hitbox('jump-attack',1,1,3*6,pygame.Rect(self.rect.width-8, 8, 27, 11)),
+            'down-attack': Hitbox('down-attack',1,1,2*6,pygame.Rect(self.rect.width-8, 10, 24, 6)),
+               'guardbox': Hitbox('guardbox',0,3,20,pygame.Rect(self.rect.width-8, -5, 11, self.rect.height+3))
         }
         self.hitbox_q = []
         self.active_hitbox = []
+        
+        # other objects
         self.fairy = Fairy(self.rect.x-12, self.rect.y+8)
         self.afterimage_q = AfterImage_Q()
         
@@ -175,10 +176,10 @@ class Player:
         self.afterimage_timer = 0
         self.white_shade_timer = 0
         self.gate_collision = False
-        self.key = pygame.key.get_pressed()
-        self.prev_key = pygame.key.get_pressed()
-        self.button = [False]*14
-        self.prev_button = [False]*14
+        self.key = {}
+        self.prev_key = {}
+        self.button = {}
+        self.prev_button = {}
     
     def restart(self):
         self.health = self.max_health
@@ -212,10 +213,10 @@ class Player:
         self.afterimage_timer = 0
         self.white_shade_timer = 0
         self.gate_collision = False
-        self.key = pygame.key.get_pressed()
-        self.prev_key = pygame.key.get_pressed()
-        self.button = [False]*14
-        self.prev_button = [False]*14
+        self.key = {}
+        self.prev_key = {}
+        self.button = {}
+        self.prev_button = {}
 
     def fill_animation_database(self, path):
         self.animation_database['idle'] = self.load_animation(path+'idle',[6]*14)
@@ -272,11 +273,23 @@ class Player:
         frame.set_alpha(self.alpha)
         return frame
 
-    def read_input(self, key, button):
-        self.prev_key = self.key
+    def set_input(self, input):
+        self.prev_key = self.key.copy()
         self.prev_button = self.button.copy()
-        self.key = key
-        self.button = button.copy()
+        self.key = input.keys.copy()
+        self.button = input.buttons.copy()
+
+    def isbuttondown(self, button):
+        return self.button.get(button, False)
+    
+    def iskeydown(self, key):
+        return self.key.get(key, False)
+    
+    def isprevbuttondown(self, button):
+        return self.prev_button.get(button, False)
+    
+    def isprevkeydown(self, key):
+        return self.prev_key.get(key, False)
 
     def guard(self):
         self.play_sound('parry')
@@ -341,24 +354,24 @@ class Player:
         self.special = min(self.special+amount, 20)
 
     def set_velocity(self):
-        if self.key[pygame.K_LEFT] or self.key[pygame.K_a] or self.button[10]:
+        if self.iskeydown('left') or self.iskeydown('a') or self.isbuttondown(13) or self.isbuttondown('left stick left'):
             if self.x_state == 'WALK':
                 if self.flip:
                     self.velocity[0] = -1
-                elif not self.key[pygame.K_RIGHT] and not self.key[pygame.K_d] and not self.button[11]:
+                elif not self.iskeydown('right') and not self.iskeydown('d') and not self.isbuttondown(14) and not self.isbuttondown('left stick right'):
                     self.velocity[0] = -1
             elif self.x_state == 'RUN':
-                if self.flip or (not self.key[pygame.K_RIGHT] and not self.key[pygame.K_d] and not self.button[11]):
+                if self.flip or (not self.iskeydown('right') and not self.iskeydown('d') and not self.isbuttondown(14) and not self.isbuttondown('left stick right')):
                     self.velocity[0] = -2
 
-        if self.key[pygame.K_RIGHT] or self.key[pygame.K_d] or self.button[11]:
+        if self.iskeydown('right') or self.iskeydown('d') or self.isbuttondown(14) or self.isbuttondown('left stick right'):
             if self.x_state == 'WALK':
                 if not self.flip:
                     self.velocity[0] = 1
-                elif not self.key[pygame.K_LEFT] and not self.key[pygame.K_a] and not self.button[10]:
+                elif not self.iskeydown('left') and not self.iskeydown('a') and not self.isbuttondown(13) and not self.isbuttondown('left stick left'):
                     self.velocity[0] = 1
             elif self.x_state == 'RUN': 
-                if not self.flip or (not self.key[pygame.K_LEFT] and not self.key[pygame.K_a] and not self.button[10]):
+                if not self.flip or (not self.iskeydown('left') and not self.iskeydown('a') and not self.isbuttondown(13) and not self.isbuttondown('left stick left')):
                     self.velocity[0] = 2
 
         self.gravity = min(10, self.gravity + 0.275)
@@ -522,7 +535,7 @@ class Player:
         
 
         if not self.input_buffer: 
-            if self.key[pygame.K_LEFT] or self.key[pygame.K_a] or self.button[10]:
+            if self.iskeydown('left') or self.iskeydown('a') or self.isbuttondown(13) or self.isbuttondown('left stick left'):
                 if self.x_state == 'IDLE':
                     if self.dtap_timer > 0 and self.flip == True and self.y_state == 'IDLE':
                         self.x_state = 'RUN'
@@ -540,7 +553,7 @@ class Player:
                 elif self.x_state == 'RUN':
                     self.ease_x_timer = 20
             
-            elif self.prev_key[pygame.K_LEFT] or self.prev_key[pygame.K_a] or self.prev_button[10]:
+            elif self.isprevkeydown('left') or self.isprevkeydown('a') or self.isprevbuttondown(13) or self.isprevbuttondown('left stick left'):
                 if (self.x_state == 'WALK' or self.x_state == 'RUN') and self.flip == True:
                     self.dtap_timer = 10
                     if self.x_state == 'RUN':
@@ -554,7 +567,7 @@ class Player:
                     if self.y_state == 'IDLE' and not self.ease_x:
                         self.set_animation('idle',0, 'LOOP')
 
-            if self.key[pygame.K_RIGHT] or self.key[pygame.K_d] or self.button[11]:
+            if self.iskeydown('right') or self.iskeydown('d') or self.isbuttondown(14) or self.isbuttondown('left stick right'):
                 if self.x_state == 'IDLE':
                     if self.dtap_timer > 0 and self.flip == False and self.y_state == 'IDLE':
                         self.x_state = 'RUN'
@@ -572,7 +585,7 @@ class Player:
                 elif self.x_state == 'RUN':
                     self.ease_x_timer = 20
 
-            elif self.prev_key[pygame.K_RIGHT] or self.prev_key[pygame.K_d] or self.prev_button[11]:
+            elif self.isprevkeydown('right') or self.isprevkeydown('d') or self.isprevbuttondown(14) or self.isprevbuttondown('left stick right'):
                 if (self.x_state == 'WALK' or self.x_state == 'RUN') and self.flip == False:
                     self.dtap_timer = 10
                     if self.x_state == 'RUN':
@@ -586,20 +599,28 @@ class Player:
                     if self.y_state == 'IDLE' and not self.ease_x:
                         self.set_animation('idle',0, 'LOOP')
 
-            if self.key[pygame.K_DOWN] or self.key[pygame.K_s] or self.button[13]:
+            if self.iskeydown('down') or self.iskeydown('s') or self.isbuttondown(12) or self.isbuttondown('left stick down'):
                 if self.x_state == 'IDLE' and self.y_state == 'IDLE':
                         self.x_state = 'DUCK'
                         self.set_animation('duck',0,'LOOP')
 
                         self.rect = pygame.Rect(self.rect.x, self.rect.y + (self.rect.height / 2), self.rect.width, self.rect.height / 2)
             
-            elif self.prev_key[pygame.K_DOWN] or self.prev_key[pygame.K_s] or self.prev_button[13]:
+            elif self.isprevkeydown('down') or self.isprevkeydown('s') or self.isprevbuttondown(12) or self.isprevbuttondown('left stick down'):
                 if self.x_state == 'DUCK':
                     self.x_state = 'IDLE'
                     self.set_animation('idle',0, 'LOOP')
-                    self.rect = pygame.Rect(self.rect.x, self.rect.y - self.rect.height, self.rect.width, self.rect.height * 2)
-
+                    self.rect = pygame.Rect(self.rect.x, self.rect.y - self.rect.height, self.rect.width, self.rect.height * 2)        
  
+            if self.isbuttondown('left trigger') or self.isbuttondown('right trigger'):
+                if self.x_state == 'WALK' and self.y_state == 'IDLE':
+                    self.x_state = 'RUN'
+                    self.set_animation('run',0, 'LOOP')
+                    self.play_sound('run')
+                    self.ease_x = True
+                    self.afterimage = True
+                    self.dtap_timer = 0
+
         #if floor_collisions['top']:
         #    self.gravity = 0.5
 
@@ -615,21 +636,22 @@ class Player:
                     if self.x_state == 'DAMAGE':
                         self.white_shading = 0
                         self.iframes = True
-                        self.iframes_timer = 30
+                        self.iframes_timer = 60
                     self.x_state = 'IDLE'
                     self.set_animation('idle',0, 'LOOP')
                 
                 if not self.input_buffer:
-                    if self.key[pygame.K_LEFT] or self.key[pygame.K_a] or self.button[10]:
+                    if self.iskeydown('left') or self.iskeydown('a') or self.isbuttondown(13) or self.isbuttondown('left stick left'):
                         self.flip = True
-                    elif self.key[pygame.K_RIGHT] or self.key[pygame.K_d] or self.button[11]:
+                    elif self.iskeydown('right') or self.iskeydown('d') or self.isbuttondown(14) or self.isbuttondown('left stick right'):
                         self.flip = False
 
         #print('frame:',self.current_frame,'\tattack:',self.key[pygame.K_z], '\thitbox-q:', self.hitbox_q, '\ta-hitbox:', self.active_hitbox)
         #print('ease_x', self.ease_x, 'timer', self.ease_x_timer, '\tvelocity', self.velocity[0])
 
-    def read_input_keydown(self, key, button):
-        if (key == pygame.K_z or button == 0):
+    def read_pressed_input(self, keys_pressed, buttons_pressed):
+        # HORIZONAL INPUT
+        if 'z' in keys_pressed or 0 in buttons_pressed:
             if self.y_state != 'IDLE':
                 h = self.hitbox['jump-attack']
                 self.hitbox_q.append(h)
@@ -639,7 +661,7 @@ class Player:
                 self.input_buffer = True
                 self.input_buffer_timer = 3*6
 
-                if (self.flip and (self.key[pygame.K_RIGHT] or self.key[pygame.K_d] or self.button[11])) or (not self.flip and (self.key[pygame.K_LEFT] or self.key[pygame.K_a] or self.button[10])):
+                if (self.flip and (self.iskeydown('right') or self.iskeydown('d') or self.isbuttondown(14) or self.isbuttondown('left stick right'))) or (not self.flip and (self.iskeydown('left') or self.iskeydown('a') or self.isbuttondown(13) or self.isbuttondown('left stick left'))):
                     self.flip = not self.flip
 
             elif self.x_state == 'IDLE' or self.x_state == 'WALK':
@@ -666,7 +688,7 @@ class Player:
                 self.after_image = True
                 self.ease_x_timer = 7*6
                 self.iframes = True
-                self.iframes_timer = 7*6
+                self.iframes_timer = 10*6
             
             else:
                 h = self.hitbox['down-attack']
@@ -677,8 +699,8 @@ class Player:
                 self.input_buffer = True
                 self.input_buffer_timer = 4*6
 
-        elif (key == pygame.K_x or button == 2) and not self.iframes:
-            if (self.x_state == 'IDLE' or self.x_state == "WALK") and self.y_state == 'IDLE':
+        elif 'x' in keys_pressed or 2 in buttons_pressed:
+            if (self.x_state == 'IDLE' or self.x_state == "WALK") and self.y_state == 'IDLE' and self.white_shading <= 0:
                 h = self.hitbox['guardbox']
                 self.hitbox_q.append(h)
                 self.set_animation('guard',0,'ONCE')
@@ -690,14 +712,15 @@ class Player:
                 self.x_state = 'IDLE'
                 self.velocity[0] = 0
         
-        elif (key == pygame.K_SPACE or button == 4 or button == 5):
+        elif 'space' in keys_pressed or 4 in buttons_pressed or 5 in buttons_pressed:
             if self.special >= 20 and self.x_state == 'IDLE' and self.y_state == 'IDLE':
                 self.x_state = 'SPECIAL'
                 self.play_sound('special_use')
                 self.play_sound('special_fade')
                 self.special = 0
 
-        if (key == pygame.K_UP or key == pygame.K_w or button == 1 or button == 12):
+        # VERTICAL INPUT AND TRANSITIONS
+        if 'up' in keys_pressed or 'w' in keys_pressed or 1 in buttons_pressed or 11 in buttons_pressed or 'left stick up' in buttons_pressed:
             if self.gate_collision and self.x_state == 'IDLE' and self.y_state == 'IDLE' and not self.ease_x:
                 self.x_state = 'TRANSITION_IN'
                 self.y_state = 'IDLE'
@@ -716,4 +739,3 @@ class Player:
                 else:
                     self.y_state = 'JUMP 2'
                     
-
